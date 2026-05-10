@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>500 Temel Kanji</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&family=Noto+Sans+JP:wght@300;400;500&family=DM+Mono:wght@300;400&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1410;
+    --paper: #f5f0e8;
+    --cream: #ede8dc;
+    --red: #c0392b;
+    --gold: #b8860b;
+    --muted: #8a7f72;
+    --border: #d4c9b8;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--paper); color: var(--ink); font-family: 'Noto Sans JP', sans-serif; min-height: 100vh; }
+
+  /* HEADER */
+  header { background: var(--ink); color: var(--paper); padding: 1.2rem 1.5rem; position: sticky; top: 0; z-index: 100; border-bottom: 3px solid var(--red); }
+  .header-inner { max-width: 1400px; margin: 0 auto; display: flex; align-items: flex-end; gap: 1.2rem; flex-wrap: wrap; }
+  .title-block h1 { font-family: 'Noto Serif JP', serif; font-size: 1.6rem; font-weight: 700; letter-spacing: 0.05em; }
+  .title-block .subtitle { font-size: 0.68rem; color: var(--muted); letter-spacing: 0.15em; text-transform: uppercase; margin-top: 0.15rem; font-family: 'DM Mono', monospace; }
+  .controls { display: flex; gap: 0.6rem; flex-wrap: wrap; flex: 1; align-items: center; }
+  input[type="text"] { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: var(--paper); padding: 0.45rem 0.9rem; font-size: 0.85rem; font-family: 'Noto Sans JP', sans-serif; border-radius: 2px; outline: none; width: 180px; transition: border 0.2s; }
+  input[type="text"]::placeholder { color: rgba(255,255,255,0.35); }
+  input[type="text"]:focus { border-color: var(--red); }
+  select { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: var(--paper); padding: 0.45rem 0.7rem; font-size: 0.82rem; font-family: 'DM Mono', monospace; border-radius: 2px; outline: none; cursor: pointer; }
+  select option { background: #2a2420; }
+  .count-badge { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); margin-left: auto; white-space: nowrap; }
+  .count-badge span { color: var(--red); font-size: 0.95rem; }
+  .view-toggle { display: flex; gap: 0.3rem; }
+  .view-btn { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.5); padding: 0.38rem 0.65rem; cursor: pointer; font-size: 0.72rem; border-radius: 2px; transition: all 0.2s; font-family: 'DM Mono', monospace; }
+  .view-btn.active { background: var(--red); border-color: var(--red); color: white; }
+
+  /* MAIN */
+  main { max-width: 1400px; margin: 0 auto; padding: 1.5rem 1.5rem 4rem; }
+
+  /* GRID */
+  .grid-view { display: none; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 1px; background: var(--border); border: 1px solid var(--border); }
+  .grid-view.active { display: grid; }
+  .kanji-card { background: var(--paper); padding: 1.1rem 1rem 1rem; cursor: pointer; transition: background 0.15s; position: relative; }
+  .kanji-card:hover { background: var(--cream); }
+  .kanji-card .num { position: absolute; top: 0.5rem; right: 0.6rem; font-family: 'DM Mono', monospace; font-size: 0.62rem; color: var(--muted); }
+  .kanji-card .kanji-char { font-family: 'Noto Serif JP', serif; font-size: 2.6rem; line-height: 1; margin-bottom: 0.35rem; color: var(--ink); }
+  .kanji-card .readings { font-family: 'DM Mono', monospace; font-size: 0.62rem; color: var(--red); letter-spacing: 0.05em; margin-bottom: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .kanji-card .meaning { font-size: 0.73rem; color: var(--ink); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .kanji-card .example { font-family: 'Noto Serif JP', serif; font-size: 0.68rem; color: var(--muted); margin-top: 0.35rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* LIST */
+  .list-view { display: none; }
+  .list-view.active { display: block; }
+  .list-header { display: grid; grid-template-columns: 46px 70px 115px 170px 1fr; gap: 0.9rem; padding: 0.55rem 0.9rem; background: var(--ink); color: var(--paper); font-family: 'DM Mono', monospace; font-size: 0.67rem; letter-spacing: 0.1em; text-transform: uppercase; border-bottom: 2px solid var(--red); }
+  .list-row { display: grid; grid-template-columns: 46px 70px 115px 170px 1fr; gap: 0.9rem; padding: 0.65rem 0.9rem; border-bottom: 1px solid var(--border); align-items: center; cursor: pointer; transition: background 0.1s; }
+  .list-row:hover { background: var(--cream); }
+  .list-row .n { font-family: 'DM Mono', monospace; font-size: 0.68rem; color: var(--muted); }
+  .list-row .k { font-family: 'Noto Serif JP', serif; font-size: 1.9rem; }
+  .list-row .r { font-family: 'DM Mono', monospace; font-size: 0.68rem; color: var(--red); }
+  .list-row .m { font-size: 0.8rem; font-weight: 500; }
+  .list-row .e { font-family: 'Noto Serif JP', serif; font-size: 0.77rem; color: var(--muted); }
+
+  /* MODAL */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(26,20,16,0.75); z-index: 200; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--paper); border: 1px solid var(--border); border-top: 4px solid var(--red); max-width: 520px; width: 90%; padding: 2rem; position: relative; max-height: 90vh; overflow-y: auto; }
+  .modal-close { position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--muted); font-family: 'DM Mono', monospace; padding: 0.2rem 0.5rem; }
+  .modal-close:hover { color: var(--red); }
+  .modal-num { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--muted); letter-spacing: 0.1em; margin-bottom: 0.5rem; }
+  .modal-kanji { font-family: 'Noto Serif JP', serif; font-size: 6rem; line-height: 1; color: var(--ink); margin-bottom: 1rem; }
+  .modal-meaning { font-size: 1.2rem; font-weight: 700; color: var(--ink); margin-bottom: 1.2rem; font-family: 'Playfair Display', serif; }
+  .reading-section { margin-bottom: 1rem; }
+  .reading-label { font-family: 'DM Mono', monospace; font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.3rem; }
+  .reading-pills { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+  .pill { background: var(--cream); border: 1px solid var(--border); padding: 0.25rem 0.6rem; font-family: 'DM Mono', monospace; font-size: 0.8rem; border-radius: 2px; color: var(--red); }
+  .pill.kun { color: #1a6b3c; background: #eef7f1; border-color: #c8e6d4; }
+  .examples-section { margin-top: 1.2rem; border-top: 1px solid var(--border); padding-top: 1rem; }
+  .examples-label { font-family: 'DM Mono', monospace; font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.6rem; }
+  .example-item { display: flex; align-items: baseline; gap: 0.75rem; margin-bottom: 0.6rem; padding-bottom: 0.6rem; border-bottom: 1px dashed var(--border); }
+  .example-item:last-child { border-bottom: none; }
+  .ex-word { font-family: 'Noto Serif JP', serif; font-size: 1.2rem; min-width: 80px; }
+  .ex-read { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--red); min-width: 80px; }
+  .ex-mean { font-size: 0.8rem; color: var(--muted); }
+
+  /* NO RESULTS */
+  .no-results { text-align: center; padding: 4rem 2rem; color: var(--muted); font-family: 'Noto Serif JP', serif; font-size: 1.1rem; display: none; }
+  .no-results .big { font-size: 3rem; margin-bottom: 1rem; }
+
+  /* ── FLASHCARD ── */
+  .flash-view {
+    display: none; flex-direction: column; align-items: center;
+    padding: 1rem 1rem 2rem;
+    /* Fixed height so nothing scrolls */
+    height: calc(100vh - 80px);
+    overflow: hidden;
+    justify-content: flex-start;
+  }
+  .flash-view.active { display: flex; }
+
+  .flash-topbar { width: 100%; max-width: 480px; display: flex; align-items: center; gap: 0.8rem; margin-bottom: 1rem; flex-shrink: 0; }
+  .flash-count { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--muted); white-space: nowrap; }
+  .flash-pbar { flex: 1; height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .flash-pfill { height: 100%; background: var(--red); border-radius: 2px; transition: width 0.4s ease; width: 0%; }
+  .flash-jlpt-sel { font-family: 'DM Mono', monospace; font-size: 0.72rem; background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 0.2rem 0.4rem; border-radius: 2px; cursor: pointer; }
+  .flash-jlpt-sel option { background: var(--paper); }
+  .flash-live-score { width: 100%; max-width: 480px; display: flex; justify-content: center; gap: 1.5rem; margin-bottom: 0.8rem; flex-shrink: 0; }
+  .ls-item { font-family: 'DM Mono', monospace; font-size: 0.72rem; letter-spacing: 0.05em; }
+  .ls-item.w { color: #c0392b; } .ls-item.p { color: #b8860b; } .ls-item.g { color: #1a6b3c; }
+
+  /* 3D FLIP CARD */
+  .fc-scene {
+    width: 100%; max-width: 480px;
+    flex-shrink: 0;
+    perspective: 1000px;
+  }
+  .fc-flipper {
+    position: relative;
+    width: 100%; height: 340px;
+    transform-style: preserve-3d;
+    transition: transform 0.82s cubic-bezier(.4,0,.2,1);
+    cursor: pointer;
+  }
+  .fc-flipper.flipped { transform: rotateY(180deg); }
+  /* slide out/in animations for next card */
+  .fc-flipper.exit-left { transform: translateX(-130%) rotateY(0deg); opacity: 0; transition: transform 0.8s cubic-bezier(.4,0,.2,1), opacity 0.6s; }
+  .fc-flipper.enter-right { transform: translateX(110%) rotateY(0deg); opacity: 0; transition: none; }
+
+  .fc-face {
+    position: absolute; inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    border-radius: 6px;
+    box-shadow: 0 4px 24px rgba(26,20,16,0.10);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 1.5rem;
+    overflow: hidden;
+  }
+  .fc-front {
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-top: 4px solid var(--red);
+  }
+  .fc-back {
+    background: var(--cream);
+    border: 1px solid var(--border);
+    border-top: 4px solid var(--ink);
+    transform: rotateY(180deg);
+    justify-content: flex-start;
+    overflow-y: auto;
+    padding: 1.2rem 1.4rem;
+    /* scrollable only on back face */
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .flash-badge { font-family: 'DM Mono', monospace; font-size: 0.6rem; letter-spacing: 0.12em; color: var(--muted); border: 1px solid var(--border); padding: 0.1rem 0.4rem; border-radius: 2px; position: absolute; top: 0.9rem; left: 0.9rem; }
+  .flash-num   { font-family: 'DM Mono', monospace; font-size: 0.6rem; color: var(--muted); position: absolute; top: 0.9rem; right: 0.9rem; }
+  .flash-tap-hint { font-family: 'DM Mono', monospace; font-size: 0.6rem; color: var(--muted); position: absolute; bottom: 0.9rem; opacity: 0.5; letter-spacing: 0.06em; }
+
+  .flash-kanji { font-family: 'Noto Serif JP', serif; font-size: 8.5rem; line-height: 1; color: var(--ink); text-align: center; }
+
+  /* BACK FACE content */
+  .fc-back-top { width: 100%; display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.8rem; flex-shrink: 0; }
+  .fc-back-result { display: inline-flex; align-items: center; gap: 0.35rem; font-family: 'DM Mono', monospace; font-size: 0.72rem; padding: 0.22rem 0.6rem; border-radius: 2px; }
+  .fc-back-result.correct { background: #eef7f1; color: #1a6b3c; border: 1px solid #c8e6d4; }
+  .fc-back-result.wrong   { background: #fde8e8; color: #c0392b; border: 1px solid #f5c6c6; }
+  .fc-back-result.neutral { background: var(--paper); color: var(--muted); border: 1px solid var(--border); }
+  .fc-tap-back-hint { font-family: 'DM Mono', monospace; font-size: 0.6rem; color: var(--muted); opacity: 0.5; letter-spacing: 0.06em; }
+
+  .fc-user-ans { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); margin-bottom: 0.6rem; width: 100%; }
+  .fc-ans-meaning { font-family: 'Playfair Display', serif; font-size: 1.5rem; color: var(--ink); margin-bottom: 0.7rem; width: 100%; }
+  .fc-ans-pills { display: flex; gap: 0.35rem; flex-wrap: wrap; margin-bottom: 0.8rem; width: 100%; }
+  .fc-ans-exlabel { font-family: 'DM Mono', monospace; font-size: 0.58rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.45rem; border-top: 1px dashed var(--border); padding-top: 0.7rem; width: 100%; }
+  .fc-ans-ex { display: flex; gap: 0.6rem; align-items: baseline; margin-bottom: 0.4rem; width: 100%; }
+  .fc-ans-ex .ew { font-family: 'Noto Serif JP', serif; font-size: 1rem; min-width: 65px; }
+  .fc-ans-ex .er { font-family: 'DM Mono', monospace; font-size: 0.65rem; color: var(--red); min-width: 70px; }
+  .fc-ans-ex .em { font-size: 0.72rem; color: var(--muted); }
+
+  /* INPUT ROW */
+  .flash-input-row { width: 100%; max-width: 480px; display: flex; gap: 0.5rem; margin-top: 0.8rem; flex-shrink: 0; }
+  .flash-input-row input {
+    flex: 1; background: var(--paper); border: 1px solid var(--border);
+    border-bottom: 2px solid var(--ink); color: var(--ink);
+    padding: 0.7rem 1rem; font-size: 1rem; font-family: 'Noto Sans JP', sans-serif;
+    border-radius: 2px; outline: none; transition: border-color 0.2s, background 0.2s;
+  }
+  .flash-input-row input:focus { border-bottom-color: var(--red); }
+  .flash-input-row input.correct { border-bottom-color: #1a6b3c; background: #eef7f1; color: #1a6b3c; }
+  .flash-input-row input.wrong   { border-bottom-color: var(--red); background: #fde8e8; color: var(--red); }
+  .flash-show-btn {
+    background: var(--ink); color: var(--paper); border: none;
+    padding: 0.7rem 1rem; font-family: 'DM Mono', monospace;
+    font-size: 0.72rem; letter-spacing: 0.08em; cursor: pointer;
+    border-radius: 2px; white-space: nowrap; flex-shrink: 0; transition: background 0.15s;
+  }
+  .flash-show-btn:active { background: var(--red); }
+
+  /* NEXT BUTTON ROW */
+  .flash-next-row { width: 100%; max-width: 480px; display: none; margin-top: 0.6rem; flex-shrink: 0; }
+  .flash-next-row.visible { display: flex; gap: 0.5rem; }
+  .flash-next-btn {
+    flex: 1; background: var(--ink); color: var(--paper); border: none;
+    padding: 0.8rem; font-family: 'DM Mono', monospace; font-size: 0.8rem;
+    letter-spacing: 0.08em; cursor: pointer; border-radius: 2px;
+    transition: background 0.15s;
+  }
+  .flash-next-btn:active { background: var(--red); }
+  .flash-hint-row { font-family: 'DM Mono', monospace; font-size: 0.6rem; color: var(--muted); margin-top: 0.4rem; text-align: center; opacity: 0.6; flex-shrink: 0; }
+
+  /* SCORE */
+  .flash-score { width: 100%; max-width: 480px; text-align: center; padding: 2rem 1.5rem; display: none; flex-shrink: 0; }
+  .flash-score.open { display: block; }
+  .flash-score-big { font-family: 'Noto Serif JP', serif; font-size: 4.5rem; margin-bottom: 0.5rem; }
+  .flash-score-title { font-family: 'Playfair Display', serif; font-size: 1.4rem; margin-bottom: 0.4rem; }
+  .flash-score-sub { font-family: 'DM Mono', monospace; font-size: 0.73rem; color: var(--muted); margin-bottom: 1.8rem; }
+  .flash-score-nums { display: flex; justify-content: center; gap: 2.5rem; margin-bottom: 1.8rem; }
+  .sn { text-align: center; }
+  .sn-val { font-family: 'DM Mono', monospace; font-size: 2rem; font-weight: bold; }
+  .sn-val.w { color: #c0392b; } .sn-val.p { color: #b8860b; } .sn-val.g { color: #1a6b3c; }
+  .sn-label { font-family: 'DM Mono', monospace; font-size: 0.6rem; color: var(--muted); margin-top: 0.2rem; }
+  .flash-restart { background: var(--red); color: white; border: none; padding: 0.85rem 2rem; font-family: 'DM Mono', monospace; font-size: 0.82rem; letter-spacing: 0.1em; cursor: pointer; border-radius: 2px; }
+
+  @media (max-width: 700px) {
+    header { padding: 0.9rem 1rem; }
+    .header-inner { gap: 0.6rem; }
+    main { padding: 1rem 0.75rem 3rem; }
+    .list-header, .list-row { grid-template-columns: 40px 50px 95px 1fr; }
+    .list-header :nth-child(5), .list-row .e { display: none; }
+    .grid-view { grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); }
+    .flash-kanji { font-size: 7rem; }
+    input[type="text"] { width: 140px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="title-block">
+      <h1>漢字 500</h1>
+      <div class="subtitle">En Sık Kullanılan 500 Kanji</div>
+    </div>
+    <div class="controls">
+      <input type="text" id="search" placeholder="Kanji, anlam, okuyuş...">
+      <select id="jlpt-filter">
+        <option value="">Tüm Seviyeler</option>
+        <option value="N5">JLPT N5</option>
+        <option value="N4">JLPT N4</option>
+        <option value="N3">JLPT N3</option>
+        <option value="N2">JLPT N2</option>
+        <option value="N1">JLPT N1</option>
+      </select>
+      <div class="view-toggle">
+        <button class="view-btn" id="btn-grid" onclick="setView('grid')">▦</button>
+        <button class="view-btn" id="btn-list" onclick="setView('list')">☰ Liste</button>
+        <button class="view-btn" id="btn-flash" onclick="setView('flash')">⟳ Flashcard</button>
+      </div>
+      <div class="count-badge"><span id="shown-count">500</span> / 500</div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div id="grid-container" class="grid-view"></div>
+  <div id="list-container" class="list-view">
+    <div class="list-header"><div>#</div><div>漢字</div><div>Okuyuş</div><div>Anlam</div><div>Örnek</div></div>
+    <div id="list-rows"></div>
+  </div>
+  <div class="no-results" id="no-results"><div class="big">？</div>Sonuç bulunamadı</div>
+
+  <!-- FLASHCARD VIEW -->
+  <div id="flash-container" class="flash-view">
+    <div class="flash-topbar">
+      <span class="flash-count" id="fc-count">1 / 500</span>
+      <div class="flash-pbar"><div class="flash-pfill" id="fc-fill"></div></div>
+      <select class="flash-jlpt-sel" id="fc-jlpt" onchange="flashReset()">
+        <option value="">Tüm seviyeler</option>
+        <option value="N5">N5</option>
+        <option value="N4">N4</option>
+        <option value="N3">N3</option>
+        <option value="N2">N2</option>
+        <option value="N1">N1</option>
+      </select>
+    </div>
+    <div class="flash-live-score" id="fc-live-score">
+      <span class="ls-item w">✗ <span id="ls-w">0</span></span>
+      <span class="ls-item p">— <span id="ls-p">0</span></span>
+      <span class="ls-item g">✓ <span id="ls-g">0</span></span>
+    </div>
+
+    <!-- 3D flip card -->
+    <div class="fc-scene">
+      <div class="fc-flipper" id="fc-flipper">
+        <!-- FRONT: kanji -->
+        <div class="fc-face fc-front" id="fc-front">
+          <div class="flash-badge" id="fc-badge">N5</div>
+          <div class="flash-num" id="fc-num">#1</div>
+          <div class="flash-kanji" id="fc-kanji">日</div>
+          <div class="flash-tap-hint">karta bas → çevir</div>
+        </div>
+        <!-- BACK: answer -->
+        <div class="fc-face fc-back" id="fc-back">
+          <div class="fc-back-top">
+            <div id="fc-back-result" class="fc-back-result neutral">—</div>
+            <span class="fc-tap-back-hint">bas → çevir</span>
+          </div>
+          <div id="fc-user-ans" class="fc-user-ans" style="display:none"></div>
+          <div class="fc-ans-meaning" id="fc-meaning"></div>
+          <div class="fc-ans-pills" id="fc-pills"></div>
+          <div class="fc-ans-exlabel">Sık Kullanılan Kelimeler</div>
+          <div id="fc-examples"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- input row — shown when front is visible -->
+    <div class="flash-input-row" id="fc-input-row">
+      <input type="text" id="fc-answer-input" placeholder="Anlamını yaz..." autocomplete="off" autocorrect="off" spellcheck="false">
+      <button class="flash-show-btn" onclick="flashReveal()">Göster</button>
+    </div>
+
+    <!-- next row — shown after reveal -->
+    <div class="flash-next-row" id="fc-next-row">
+      <button class="flash-next-btn" onclick="flashNext()">Sonraki → &nbsp;<span style="opacity:0.5;font-size:0.65rem">veya sağa kaydır</span></button>
+    </div>
+
+    <div class="flash-hint-row" id="fc-hint-row" style="display:none">sağa kaydırarak da geçebilirsin</div>
+
+    <div class="flash-score" id="fc-score">
+      <div class="flash-score-big">完</div>
+      <div class="flash-score-title">Tur tamamlandı!</div>
+      <div class="flash-score-sub" id="fc-score-sub"></div>
+      <div class="flash-score-nums">
+        <div class="sn"><div class="sn-val w" id="sc-w">0</div><div class="sn-label">Yanlış</div></div>
+        <div class="sn"><div class="sn-val p" id="sc-p">0</div><div class="sn-label">Pas</div></div>
+        <div class="sn"><div class="sn-val g" id="sc-g">0</div><div class="sn-label">Doğru</div></div>
+      </div>
+      <button class="flash-restart" onclick="flashReset()">Tekrar Başla</button>
+    </div>
+  </div>
+</main>
+
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal-box">
+    <button class="modal-close" onclick="closeModalBtn()">✕</button>
+    <div class="modal-num" id="m-num"></div>
+    <div class="modal-kanji" id="m-kanji"></div>
+    <div class="modal-meaning" id="m-meaning"></div>
+    <div class="reading-section">
+      <div class="reading-label">音読み (On'yomi)</div>
+      <div class="reading-pills" id="m-on"></div>
+    </div>
+    <div class="reading-section">
+      <div class="reading-label">訓読み (Kun'yomi)</div>
+      <div class="reading-pills" id="m-kun"></div>
+    </div>
+    <div class="examples-section">
+      <div class="examples-label">Sık Kullanılan Kelimeler</div>
+      <div id="m-examples"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const KANJI = [
+  // N5
+  {n:1,k:"日",on:["ニチ","ジツ"],kun:["ひ","か"],m:"Güneş / Gün",jlpt:"N5",ex:[{w:"日本",r:"にほん",m:"Japonya"},{w:"今日",r:"きょう",m:"Bugün"},{w:"日曜日",r:"にちようび",m:"Pazar"}]},
+  {n:2,k:"一",on:["イチ","イツ"],kun:["ひと"],m:"Bir",jlpt:"N5",ex:[{w:"一つ",r:"ひとつ",m:"Bir tane"},{w:"一月",r:"いちがつ",m:"Ocak"},{w:"一番",r:"いちばん",m:"En, birinci"}]},
+  {n:3,k:"国",on:["コク"],kun:["くに"],m:"Ülke",jlpt:"N5",ex:[{w:"国語",r:"こくご",m:"Ulusal dil"},{w:"外国",r:"がいこく",m:"Yabancı ülke"},{w:"国民",r:"こくみん",m:"Vatandaş"}]},
+  {n:4,k:"人",on:["ジン","ニン"],kun:["ひと"],m:"İnsan / Kişi",jlpt:"N5",ex:[{w:"人々",r:"ひとびと",m:"İnsanlar"},{w:"外国人",r:"がいこくじん",m:"Yabancı"},{w:"人口",r:"じんこう",m:"Nüfus"}]},
+  {n:5,k:"年",on:["ネン"],kun:["とし"],m:"Yıl",jlpt:"N5",ex:[{w:"今年",r:"ことし",m:"Bu yıl"},{w:"毎年",r:"まいとし",m:"Her yıl"},{w:"来年",r:"らいねん",m:"Gelecek yıl"}]},
+  {n:6,k:"大",on:["ダイ","タイ"],kun:["おお"],m:"Büyük",jlpt:"N5",ex:[{w:"大学",r:"だいがく",m:"Üniversite"},{w:"大切",r:"たいせつ",m:"Önemli"},{w:"大好き",r:"だいすき",m:"Çok sevmek"}]},
+  {n:7,k:"十",on:["ジュウ"],kun:["とお"],m:"On",jlpt:"N5",ex:[{w:"十分",r:"じゅうぶん",m:"Yeterli"},{w:"十月",r:"じゅうがつ",m:"Ekim"},{w:"二十",r:"にじゅう",m:"Yirmi"}]},
+  {n:8,k:"二",on:["ニ"],kun:["ふた"],m:"İki",jlpt:"N5",ex:[{w:"二つ",r:"ふたつ",m:"İki tane"},{w:"二月",r:"にがつ",m:"Şubat"},{w:"二人",r:"ふたり",m:"İki kişi"}]},
+  {n:9,k:"本",on:["ホン"],kun:["もと"],m:"Kitap / Kök / Japonya",jlpt:"N5",ex:[{w:"本当",r:"ほんとう",m:"Gerçek"},{w:"日本語",r:"にほんご",m:"Japonca"},{w:"本屋",r:"ほんや",m:"Kitapçı"}]},
+  {n:10,k:"中",on:["チュウ"],kun:["なか"],m:"İçeri / Orta",jlpt:"N5",ex:[{w:"中学校",r:"ちゅうがっこう",m:"Ortaokul"},{w:"中心",r:"ちゅうしん",m:"Merkez"},{w:"中国",r:"ちゅうごく",m:"Çin"}]},
+  {n:11,k:"長",on:["チョウ"],kun:["なが"],m:"Uzun / Baş",jlpt:"N5",ex:[{w:"社長",r:"しゃちょう",m:"Şirket başkanı"},{w:"長い",r:"ながい",m:"Uzun"},{w:"成長",r:"せいちょう",m:"Büyüme"}]},
+  {n:12,k:"出",on:["シュツ"],kun:["で","だ"],m:"Çıkmak",jlpt:"N5",ex:[{w:"出口",r:"でぐち",m:"Çıkış"},{w:"出発",r:"しゅっぱつ",m:"Hareket"},{w:"出来る",r:"できる",m:"Yapabilmek"}]},
+  {n:13,k:"三",on:["サン"],kun:["み"],m:"Üç",jlpt:"N5",ex:[{w:"三つ",r:"みっつ",m:"Üç tane"},{w:"三月",r:"さんがつ",m:"Mart"},{w:"三角",r:"さんかく",m:"Üçgen"}]},
+  {n:14,k:"時",on:["ジ"],kun:["とき"],m:"Zaman / Saat",jlpt:"N5",ex:[{w:"時間",r:"じかん",m:"Zaman / Süre"},{w:"何時",r:"なんじ",m:"Kaç saat?"},{w:"時々",r:"ときどき",m:"Zaman zaman"}]},
+  {n:15,k:"行",on:["コウ","ギョウ"],kun:["い","ゆ","おこな"],m:"Gitmek / Yapmak",jlpt:"N5",ex:[{w:"銀行",r:"ぎんこう",m:"Banka"},{w:"旅行",r:"りょこう",m:"Seyahat"},{w:"行動",r:"こうどう",m:"Davranış"}]},
+  {n:16,k:"見",on:["ケン"],kun:["み"],m:"Görmek",jlpt:"N5",ex:[{w:"見る",r:"みる",m:"Görmek"},{w:"意見",r:"いけん",m:"Görüş / Fikir"},{w:"発見",r:"はっけん",m:"Keşif"}]},
+  {n:17,k:"月",on:["ゲツ","ガツ"],kun:["つき"],m:"Ay / Aya",jlpt:"N5",ex:[{w:"今月",r:"こんげつ",m:"Bu ay"},{w:"毎月",r:"まいつき",m:"Her ay"},{w:"月曜日",r:"げつようび",m:"Pazartesi"}]},
+  {n:18,k:"分",on:["ブン","フン"],kun:["わ"],m:"Dakika / Parça / Anlamak",jlpt:"N5",ex:[{w:"五分",r:"ごふん",m:"5 dakika"},{w:"自分",r:"じぶん",m:"Kendisi"},{w:"部分",r:"ぶぶん",m:"Bölüm"}]},
+  {n:19,k:"後",on:["ゴ","コウ"],kun:["あと","うし"],m:"Sonra / Arkası",jlpt:"N5",ex:[{w:"午後",r:"ごご",m:"Öğleden sonra"},{w:"最後",r:"さいご",m:"Son"},{w:"後で",r:"あとで",m:"Sonra"}]},
+  {n:20,k:"前",on:["ゼン"],kun:["まえ"],m:"Önce / Ön",jlpt:"N5",ex:[{w:"午前",r:"ごぜん",m:"Öğleden önce"},{w:"名前",r:"なまえ",m:"İsim"},{w:"以前",r:"いぜん",m:"Daha önce"}]},
+  {n:21,k:"生",on:["セイ","ショウ"],kun:["い","う","は","なま"],m:"Yaşam / Doğmak",jlpt:"N5",ex:[{w:"先生",r:"せんせい",m:"Öğretmen"},{w:"学生",r:"がくせい",m:"Öğrenci"},{w:"生活",r:"せいかつ",m:"Yaşam"}]},
+  {n:22,k:"五",on:["ゴ"],kun:["いつ"],m:"Beş",jlpt:"N5",ex:[{w:"五月",r:"ごがつ",m:"Mayıs"},{w:"五つ",r:"いつつ",m:"Beş tane"},{w:"五十",r:"ごじゅう",m:"Elli"}]},
+  {n:23,k:"間",on:["カン","ケン"],kun:["あいだ","ま"],m:"Arasında / Süre",jlpt:"N5",ex:[{w:"時間",r:"じかん",m:"Zaman"},{w:"人間",r:"にんげん",m:"İnsan (kavramı)"},{w:"間に合う",r:"まにあう",m:"Yetişmek"}]},
+  {n:24,k:"上",on:["ジョウ","ショウ"],kun:["うえ","のぼ","あ"],m:"Yukarı / Üst",jlpt:"N5",ex:[{w:"上手",r:"じょうず",m:"Becerikli"},{w:"以上",r:"いじょう",m:"Daha fazla"},{w:"上る",r:"のぼる",m:"Tırmanmak"}]},
+  {n:25,k:"東",on:["トウ"],kun:["ひがし"],m:"Doğu",jlpt:"N5",ex:[{w:"東京",r:"とうきょう",m:"Tokyo"},{w:"東西",r:"とうざい",m:"Doğu ve Batı"},{w:"東口",r:"ひがしぐち",m:"Doğu çıkışı"}]},
+  {n:26,k:"四",on:["シ"],kun:["よ","よん"],m:"Dört",jlpt:"N5",ex:[{w:"四月",r:"しがつ",m:"Nisan"},{w:"四つ",r:"よっつ",m:"Dört tane"},{w:"四季",r:"しき",m:"Dört mevsim"}]},
+  {n:27,k:"今",on:["コン","キン"],kun:["いま"],m:"Şimdi",jlpt:"N5",ex:[{w:"今日",r:"きょう",m:"Bugün"},{w:"今週",r:"こんしゅう",m:"Bu hafta"},{w:"今夜",r:"こんや",m:"Bu gece"}]},
+  {n:28,k:"金",on:["キン","コン"],kun:["かね"],m:"Altın / Para",jlpt:"N5",ex:[{w:"お金",r:"おかね",m:"Para"},{w:"金曜日",r:"きんようび",m:"Cuma"},{w:"金属",r:"きんぞく",m:"Metal"}]},
+  {n:29,k:"九",on:["キュウ","ク"],kun:["ここの"],m:"Dokuz",jlpt:"N5",ex:[{w:"九月",r:"くがつ",m:"Eylül"},{w:"九つ",r:"ここのつ",m:"Dokuz tane"},{w:"九州",r:"きゅうしゅう",m:"Kyushu"}]},
+  {n:30,k:"入",on:["ニュウ"],kun:["い","はい"],m:"Girmek / Koymak",jlpt:"N5",ex:[{w:"入口",r:"いりぐち",m:"Giriş"},{w:"入学",r:"にゅうがく",m:"Okula giriş"},{w:"入る",r:"はいる",m:"Girmek"}]},
+  {n:31,k:"学",on:["ガク"],kun:["まな"],m:"Öğrenmek / Bilim",jlpt:"N5",ex:[{w:"大学",r:"だいがく",m:"Üniversite"},{w:"学校",r:"がっこう",m:"Okul"},{w:"学ぶ",r:"まなぶ",m:"Öğrenmek"}]},
+  {n:32,k:"高",on:["コウ"],kun:["たか"],m:"Yüksek",jlpt:"N5",ex:[{w:"高校",r:"こうこう",m:"Lise"},{w:"高い",r:"たかい",m:"Yüksek/Pahalı"},{w:"最高",r:"さいこう",m:"En yüksek"}]},
+  {n:33,k:"円",on:["エン"],kun:["まる"],m:"Yen / Yuvarlak",jlpt:"N5",ex:[{w:"百円",r:"ひゃくえん",m:"100 yen"},{w:"円い",r:"まるい",m:"Yuvarlak"},{w:"円高",r:"えんだか",m:"Güçlü yen"}]},
+  {n:34,k:"子",on:["シ","ス"],kun:["こ"],m:"Çocuk",jlpt:"N5",ex:[{w:"子供",r:"こども",m:"Çocuk"},{w:"女子",r:"じょし",m:"Kız"},{w:"様子",r:"ようす",m:"Durum"}]},
+  {n:35,k:"外",on:["ガイ","ゲ"],kun:["そと","はず"],m:"Dışarı",jlpt:"N5",ex:[{w:"外国",r:"がいこく",m:"Yabancı ülke"},{w:"外出",r:"がいしゅつ",m:"Dışarı çıkma"},{w:"以外",r:"いがい",m:"Dışında"}]},
+  {n:36,k:"八",on:["ハチ"],kun:["や"],m:"Sekiz",jlpt:"N5",ex:[{w:"八月",r:"はちがつ",m:"Ağustos"},{w:"八つ",r:"やっつ",m:"Sekiz tane"},{w:"八百屋",r:"やおや",m:"Manav"}]},
+  {n:37,k:"六",on:["ロク"],kun:["む"],m:"Altı",jlpt:"N5",ex:[{w:"六月",r:"ろくがつ",m:"Haziran"},{w:"六つ",r:"むっつ",m:"Altı tane"},{w:"六十",r:"ろくじゅう",m:"Altmış"}]},
+  {n:38,k:"下",on:["カ","ゲ"],kun:["した","さ","くだ"],m:"Aşağı / Alt",jlpt:"N5",ex:[{w:"地下",r:"ちか",m:"Yer altı"},{w:"下さい",r:"ください",m:"Lütfen verin"},{w:"以下",r:"いか",m:"Aşağıda"}]},
+  {n:39,k:"気",on:["キ","ケ"],kun:["き"],m:"Hava / Ruh / Enerji",jlpt:"N5",ex:[{w:"天気",r:"てんき",m:"Hava durumu"},{w:"気持ち",r:"きもち",m:"His/Duygu"},{w:"人気",r:"にんき",m:"Popülerlik"}]},
+  {n:40,k:"小",on:["ショウ"],kun:["ちい","こ"],m:"Küçük",jlpt:"N5",ex:[{w:"小学校",r:"しょうがっこう",m:"İlkokul"},{w:"小さい",r:"ちいさい",m:"Küçük"},{w:"小説",r:"しょうせつ",m:"Roman"}]},
+
+  // N4
+  {n:41,k:"来",on:["ライ"],kun:["く","き"],m:"Gelmek",jlpt:"N4",ex:[{w:"来週",r:"らいしゅう",m:"Gelecek hafta"},{w:"来る",r:"くる",m:"Gelmek"},{w:"将来",r:"しょうらい",m:"Gelecek"}]},
+  {n:42,k:"毎",on:["マイ"],kun:[""],m:"Her",jlpt:"N4",ex:[{w:"毎日",r:"まいにち",m:"Her gün"},{w:"毎週",r:"まいしゅう",m:"Her hafta"},{w:"毎年",r:"まいとし",m:"Her yıl"}]},
+  {n:43,k:"会",on:["カイ","エ"],kun:["あ"],m:"Buluşmak / Toplantı",jlpt:"N4",ex:[{w:"会社",r:"かいしゃ",m:"Şirket"},{w:"会議",r:"かいぎ",m:"Toplantı"},{w:"社会",r:"しゃかい",m:"Toplum"}]},
+  {n:44,k:"思",on:["シ"],kun:["おも"],m:"Düşünmek",jlpt:"N4",ex:[{w:"思う",r:"おもう",m:"Düşünmek"},{w:"思い出",r:"おもいで",m:"Anı"},{w:"思想",r:"しそう",m:"Düşünce"}]},
+  {n:45,k:"同",on:["ドウ"],kun:["おな"],m:"Aynı",jlpt:"N4",ex:[{w:"同じ",r:"おなじ",m:"Aynı"},{w:"同時",r:"どうじ",m:"Aynı anda"},{w:"共同",r:"きょうどう",m:"Ortak"}]},
+  {n:46,k:"事",on:["ジ","ズ"],kun:["こと"],m:"Şey / Konu / İş",jlpt:"N4",ex:[{w:"仕事",r:"しごと",m:"İş"},{w:"大事",r:"だいじ",m:"Önemli"},{w:"事故",r:"じこ",m:"Kaza"}]},
+  {n:47,k:"自",on:["ジ","シ"],kun:["みずか"],m:"Kendisi / Kendi",jlpt:"N4",ex:[{w:"自分",r:"じぶん",m:"Kendisi"},{w:"自然",r:"しぜん",m:"Doğa"},{w:"自動車",r:"じどうしゃ",m:"Otomobil"}]},
+  {n:48,k:"社",on:["シャ"],kun:["やしろ"],m:"Şirket / Tapınak",jlpt:"N4",ex:[{w:"会社",r:"かいしゃ",m:"Şirket"},{w:"社会",r:"しゃかい",m:"Toplum"},{w:"神社",r:"じんじゃ",m:"Şinto tapınağı"}]},
+  {n:49,k:"発",on:["ハツ","ホツ"],kun:[""],m:"Başlamak / Göndermek",jlpt:"N4",ex:[{w:"発表",r:"はっぴょう",m:"Sunum"},{w:"出発",r:"しゅっぱつ",m:"Kalkış"},{w:"発展",r:"はってん",m:"Gelişme"}]},
+  {n:50,k:"者",on:["シャ"],kun:["もの"],m:"Kişi / Uzman",jlpt:"N4",ex:[{w:"医者",r:"いしゃ",m:"Doktor"},{w:"記者",r:"きしゃ",m:"Gazeteci"},{w:"若者",r:"わかもの",m:"Genç"}]},
+  {n:51,k:"地",on:["チ","ジ"],kun:[""],m:"Arazi / Yer",jlpt:"N4",ex:[{w:"地下",r:"ちか",m:"Yer altı"},{w:"地図",r:"ちず",m:"Harita"},{w:"地震",r:"じしん",m:"Deprem"}]},
+  {n:52,k:"業",on:["ギョウ","ゴウ"],kun:["わざ"],m:"İş / Endüstri",jlpt:"N4",ex:[{w:"工業",r:"こうぎょう",m:"Sanayi"},{w:"卒業",r:"そつぎょう",m:"Mezuniyet"},{w:"授業",r:"じゅぎょう",m:"Ders"}]},
+  {n:53,k:"方",on:["ホウ"],kun:["かた"],m:"Yön / Kişi / Yol",jlpt:"N4",ex:[{w:"方法",r:"ほうほう",m:"Yöntem"},{w:"地方",r:"ちほう",m:"Bölge"},{w:"方向",r:"ほうこう",m:"Yön"}]},
+  {n:54,k:"新",on:["シン"],kun:["あたら","あら"],m:"Yeni",jlpt:"N4",ex:[{w:"新聞",r:"しんぶん",m:"Gazete"},{w:"新幹線",r:"しんかんせん",m:"Shinkansen"},{w:"新しい",r:"あたらしい",m:"Yeni"}]},
+  {n:55,k:"場",on:["ジョウ"],kun:["ば"],m:"Yer / Mekan",jlpt:"N4",ex:[{w:"場所",r:"ばしょ",m:"Yer"},{w:"工場",r:"こうじょう",m:"Fabrika"},{w:"市場",r:"いちば",m:"Pazar"}]},
+  {n:56,k:"員",on:["イン"],kun:[""],m:"Üye / Çalışan",jlpt:"N4",ex:[{w:"会員",r:"かいいん",m:"Üye"},{w:"店員",r:"てんいん",m:"Mağaza çalışanı"},{w:"社員",r:"しゃいん",m:"Şirket çalışanı"}]},
+  {n:57,k:"立",on:["リツ","リュウ"],kun:["た"],m:"Ayakta durmak / Kurmak",jlpt:"N4",ex:[{w:"国立",r:"こくりつ",m:"Ulusal"},{w:"立つ",r:"たつ",m:"Ayağa kalkmak"},{w:"独立",r:"どくりつ",m:"Bağımsızlık"}]},
+  {n:58,k:"開",on:["カイ"],kun:["あ","ひら"],m:"Açmak",jlpt:"N4",ex:[{w:"開く",r:"ひらく",m:"Açılmak"},{w:"開発",r:"かいはつ",m:"Geliştirme"},{w:"公開",r:"こうかい",m:"Kamuya açma"}]},
+  {n:59,k:"手",on:["シュ"],kun:["て"],m:"El",jlpt:"N4",ex:[{w:"手紙",r:"てがみ",m:"Mektup"},{w:"選手",r:"せんしゅ",m:"Sporcu"},{w:"手伝う",r:"てつだう",m:"Yardım etmek"}]},
+  {n:60,k:"力",on:["リョク","リキ"],kun:["ちから"],m:"Güç / Kuvvet",jlpt:"N4",ex:[{w:"努力",r:"どりょく",m:"Çaba"},{w:"能力",r:"のうりょく",m:"Yetenek"},{w:"力強い",r:"ちからづよい",m:"Güçlü"}]},
+  {n:61,k:"問",on:["モン"],kun:["と"],m:"Sormak / Sorun",jlpt:"N4",ex:[{w:"問題",r:"もんだい",m:"Problem"},{w:"質問",r:"しつもん",m:"Soru"},{w:"問う",r:"とう",m:"Sormak"}]},
+  {n:62,k:"代",on:["ダイ","タイ"],kun:["か","しろ"],m:"Dönem / Nesil / Değişmek",jlpt:"N4",ex:[{w:"時代",r:"じだい",m:"Dönem"},{w:"現代",r:"げんだい",m:"Modern çağ"},{w:"代わる",r:"かわる",m:"Değişmek"}]},
+  {n:63,k:"明",on:["メイ","ミョウ"],kun:["あか","あき"],m:"Parlak / Aydınlık",jlpt:"N4",ex:[{w:"明日",r:"あした",m:"Yarın"},{w:"説明",r:"せつめい",m:"Açıklama"},{w:"明るい",r:"あかるい",m:"Aydınlık"}]},
+  {n:64,k:"動",on:["ドウ"],kun:["うご"],m:"Hareket etmek",jlpt:"N4",ex:[{w:"運動",r:"うんどう",m:"Egzersiz"},{w:"動く",r:"うごく",m:"Hareket etmek"},{w:"感動",r:"かんどう",m:"Duygulanma"}]},
+  {n:65,k:"京",on:["キョウ","ケイ"],kun:[""],m:"Başkent",jlpt:"N4",ex:[{w:"東京",r:"とうきょう",m:"Tokyo"},{w:"京都",r:"きょうと",m:"Kyoto"},{w:"上京",r:"じょうきょう",m:"Başkente gitmek"}]},
+  {n:66,k:"目",on:["モク","ボク"],kun:["め"],m:"Göz",jlpt:"N4",ex:[{w:"目的",r:"もくてき",m:"Amaç"},{w:"注目",r:"ちゅうもく",m:"Dikkat"},{w:"目立つ",r:"めだつ",m:"Göze çarpmak"}]},
+  {n:67,k:"通",on:["ツウ"],kun:["とお","かよ"],m:"Geçmek / İletişim",jlpt:"N4",ex:[{w:"交通",r:"こうつう",m:"Trafik"},{w:"通う",r:"かよう",m:"Gidip gelmek"},{w:"普通",r:"ふつう",m:"Normal"}]},
+  {n:68,k:"言",on:["ゲン","ゴン"],kun:["い","こと"],m:"Söylemek / Kelime",jlpt:"N4",ex:[{w:"言葉",r:"ことば",m:"Kelime / Dil"},{w:"言う",r:"いう",m:"Söylemek"},{w:"宣言",r:"せんげん",m:"İlan"}]},
+  {n:69,k:"理",on:["リ"],kun:[""],m:"Mantık / Neden / Yönetmek",jlpt:"N4",ex:[{w:"料理",r:"りょうり",m:"Yemek pişirme"},{w:"理由",r:"りゆう",m:"Neden"},{w:"管理",r:"かんり",m:"Yönetim"}]},
+  {n:70,k:"体",on:["タイ","テイ"],kun:["からだ"],m:"Vücut",jlpt:"N4",ex:[{w:"体育",r:"たいいく",m:"Beden eğitimi"},{w:"身体",r:"しんたい",m:"Vücut"},{w:"全体",r:"ぜんたい",m:"Bütün"}]},
+  {n:71,k:"田",on:["デン"],kun:["た"],m:"Pirinç tarlası",jlpt:"N4",ex:[{w:"田舎",r:"いなか",m:"Kırsal"},{w:"水田",r:"すいでん",m:"Pirinç tarlası"},{w:"田んぼ",r:"たんぼ",m:"Pirinç tarlası"}]},
+  {n:72,k:"主",on:["シュ","ス"],kun:["ぬし","おも"],m:"Ana / Efendi / Sahip",jlpt:"N4",ex:[{w:"主人",r:"しゅじん",m:"Eş (erkek) / Efendi"},{w:"主に",r:"おもに",m:"Esas olarak"},{w:"民主",r:"みんしゅ",m:"Demokrasi"}]},
+  {n:73,k:"数",on:["スウ","ス"],kun:["かず","かぞ"],m:"Sayı / Saymak",jlpt:"N4",ex:[{w:"数学",r:"すうがく",m:"Matematik"},{w:"数える",r:"かぞえる",m:"Saymak"},{w:"多数",r:"たすう",m:"Çoğunluk"}]},
+  {n:74,k:"次",on:["ジ","シ"],kun:["つぎ","つ"],m:"Sonraki / Sıradaki",jlpt:"N4",ex:[{w:"次回",r:"じかい",m:"Bir dahaki sefere"},{w:"次第",r:"しだい",m:"Sıraya göre"},{w:"次の",r:"つぎの",m:"Sonraki"}]},
+  {n:75,k:"文",on:["ブン","モン"],kun:["ふみ"],m:"Yazı / Cümle / Metin",jlpt:"N4",ex:[{w:"文化",r:"ぶんか",m:"Kültür"},{w:"作文",r:"さくぶん",m:"Kompozisyon"},{w:"文章",r:"ぶんしょう",m:"Yazı / Metin"}]},
+  {n:76,k:"特",on:["トク"],kun:[""],m:"Özel / Karakteristik",jlpt:"N4",ex:[{w:"特別",r:"とくべつ",m:"Özel"},{w:"特に",r:"とくに",m:"Özellikle"},{w:"特急",r:"とっきゅう",m:"Ekspres tren"}]},
+  {n:77,k:"女",on:["ジョ","ニョ"],kun:["おんな"],m:"Kadın",jlpt:"N4",ex:[{w:"女性",r:"じょせい",m:"Kadın (resmi)"},{w:"女の子",r:"おんなのこ",m:"Kız çocuğu"},{w:"彼女",r:"かのじょ",m:"Kız arkadaş / O (kadın)"}]},
+  {n:78,k:"正",on:["セイ","ショウ"],kun:["ただ","まさ"],m:"Doğru / Düzeltmek",jlpt:"N4",ex:[{w:"正しい",r:"ただしい",m:"Doğru"},{w:"正月",r:"しょうがつ",m:"Yeni Yıl"},{w:"正直",r:"しょうじき",m:"Dürüstlük"}]},
+  {n:79,k:"安",on:["アン"],kun:["やす"],m:"Ucuz / Güvenli",jlpt:"N4",ex:[{w:"安全",r:"あんぜん",m:"Güvenlik"},{w:"安い",r:"やすい",m:"Ucuz"},{w:"不安",r:"ふあん",m:"Endişe"}]},
+  {n:80,k:"近",on:["キン"],kun:["ちか"],m:"Yakın",jlpt:"N4",ex:[{w:"近い",r:"ちかい",m:"Yakın"},{w:"近所",r:"きんじょ",m:"Mahalle"},{w:"最近",r:"さいきん",m:"Son zamanlarda"}]},
+
+  // N3
+  {n:81,k:"政",on:["セイ","ショウ"],kun:["まつりごと"],m:"Yönetim / Siyaset",jlpt:"N3",ex:[{w:"政治",r:"せいじ",m:"Siyaset"},{w:"政府",r:"せいふ",m:"Hükümet"},{w:"行政",r:"ぎょうせい",m:"İdare"}]},
+  {n:82,k:"経",on:["ケイ","キョウ"],kun:["へ"],m:"Geçmek / Yönetmek",jlpt:"N3",ex:[{w:"経済",r:"けいざい",m:"Ekonomi"},{w:"経験",r:"けいけん",m:"Deneyim"},{w:"経営",r:"けいえい",m:"İşletme"}]},
+  {n:83,k:"現",on:["ゲン"],kun:["あらわ"],m:"Şimdiki / Görünmek",jlpt:"N3",ex:[{w:"現在",r:"げんざい",m:"Şu anda"},{w:"現実",r:"げんじつ",m:"Gerçeklik"},{w:"表現",r:"ひょうげん",m:"İfade"}]},
+  {n:84,k:"民",on:["ミン"],kun:["たみ"],m:"Halk / Uyruk",jlpt:"N3",ex:[{w:"国民",r:"こくみん",m:"Vatandaş"},{w:"民主",r:"みんしゅ",m:"Demokrasi"},{w:"住民",r:"じゅうみん",m:"Sakin"}]},
+  {n:85,k:"用",on:["ヨウ"],kun:["もち"],m:"Kullanmak / Amaç",jlpt:"N3",ex:[{w:"使用",r:"しよう",m:"Kullanım"},{w:"用意",r:"ようい",m:"Hazırlık"},{w:"利用",r:"りよう",m:"Faydalanma"}]},
+  {n:86,k:"度",on:["ド","ト","タク"],kun:["たび"],m:"Derece / Kez",jlpt:"N3",ex:[{w:"今度",r:"こんど",m:"Bu sefer"},{w:"程度",r:"ていど",m:"Derece"},{w:"態度",r:"たいど",m:"Tutum"}]},
+  {n:87,k:"強",on:["キョウ"],kun:["つよ","し"],m:"Güçlü",jlpt:"N3",ex:[{w:"強い",r:"つよい",m:"Güçlü"},{w:"勉強",r:"べんきょう",m:"Çalışma"},{w:"強調",r:"きょうちょう",m:"Vurgu"}]},
+  {n:88,k:"公",on:["コウ"],kun:["おおやけ"],m:"Kamu / Resmi",jlpt:"N3",ex:[{w:"公園",r:"こうえん",m:"Park"},{w:"公共",r:"こうきょう",m:"Kamusal"},{w:"公式",r:"こうしき",m:"Resmi"}]},
+  {n:89,k:"持",on:["ジ"],kun:["も"],m:"Tutmak / Taşımak",jlpt:"N3",ex:[{w:"持つ",r:"もつ",m:"Tutmak"},{w:"気持ち",r:"きもち",m:"His"},{w:"支持",r:"しじ",m:"Destek"}]},
+  {n:90,k:"第",on:["ダイ"],kun:[""],m:"Sayı sırası (sıra belirtir)",jlpt:"N3",ex:[{w:"第一",r:"だいいち",m:"Birinci"},{w:"第二",r:"だいに",m:"İkinci"},{w:"落第",r:"らくだい",m:"Sınıfta kalma"}]},
+  {n:91,k:"関",on:["カン"],kun:["せき"],m:"İlgili / Bağlantılı",jlpt:"N3",ex:[{w:"関係",r:"かんけい",m:"İlişki"},{w:"関心",r:"かんしん",m:"İlgi"},{w:"関連",r:"かんれん",m:"Bağlantı"}]},
+  {n:92,k:"市",on:["シ"],kun:["いち"],m:"Şehir / Pazar",jlpt:"N3",ex:[{w:"市場",r:"いちば",m:"Pazar yeri"},{w:"市民",r:"しみん",m:"Şehir sakinleri"},{w:"都市",r:"とし",m:"Metropol"}]},
+  {n:93,k:"将",on:["ショウ"],kun:["まさ"],m:"General / İleride",jlpt:"N3",ex:[{w:"将来",r:"しょうらい",m:"Gelecek"},{w:"将軍",r:"しょうぐん",m:"Shogun"},{w:"将棋",r:"しょうぎ",m:"Shogi (satranç benzeri oyun)"}]},
+  {n:94,k:"以",on:["イ"],kun:[""],m:"Göre / Daha",jlpt:"N3",ex:[{w:"以上",r:"いじょう",m:"Daha fazla"},{w:"以下",r:"いか",m:"Daha az"},{w:"以前",r:"いぜん",m:"Daha önce"}]},
+  {n:95,k:"結",on:["ケツ"],kun:["むす"],m:"Bağlamak / Sonuç",jlpt:"N3",ex:[{w:"結果",r:"けっか",m:"Sonuç"},{w:"結婚",r:"けっこん",m:"Evlilik"},{w:"結局",r:"けっきょく",m:"Sonunda"}]},
+  {n:96,k:"行",on:["コウ","ギョウ","アン"],kun:["い","ゆ","おこな"],m:"Gitmek / Yürütmek",jlpt:"N3",ex:[{w:"旅行",r:"りょこう",m:"Seyahat"},{w:"行為",r:"こうい",m:"Eylem"},{w:"行事",r:"ぎょうじ",m:"Etkinlik"}]},
+  {n:97,k:"活",on:["カツ"],kun:["い"],m:"Canlı / Yaşam",jlpt:"N3",ex:[{w:"生活",r:"せいかつ",m:"Yaşam"},{w:"活動",r:"かつどう",m:"Aktivite"},{w:"活用",r:"かつよう",m:"Kullanım / Çekim"}]},
+  {n:98,k:"表",on:["ヒョウ"],kun:["おもて","あらわ"],m:"Tablo / Yüzey / Göstermek",jlpt:"N3",ex:[{w:"発表",r:"はっぴょう",m:"Sunum"},{w:"表現",r:"ひょうげん",m:"İfade"},{w:"代表",r:"だいひょう",m:"Temsilci"}]},
+  {n:99,k:"全",on:["ゼン"],kun:["すべ","まった"],m:"Tamamı",jlpt:"N3",ex:[{w:"全部",r:"ぜんぶ",m:"Hepsi"},{w:"全体",r:"ぜんたい",m:"Bütün"},{w:"完全",r:"かんぜん",m:"Mükemmel"}]},
+  {n:100,k:"制",on:["セイ"],kun:[""],m:"Sistem / Düzenlemek",jlpt:"N3",ex:[{w:"制度",r:"せいど",m:"Sistem"},{w:"体制",r:"たいせい",m:"Yapı/Rejim"},{w:"規制",r:"きせい",m:"Düzenleme"}]},
+  {n:101,k:"機",on:["キ"],kun:["はた"],m:"Makine / Fırsat",jlpt:"N3",ex:[{w:"機会",r:"きかい",m:"Fırsat"},{w:"飛行機",r:"ひこうき",m:"Uçak"},{w:"機能",r:"きのう",m:"Fonksiyon"}]},
+  {n:102,k:"区",on:["ク"],kun:[""],m:"Bölge / İlçe",jlpt:"N3",ex:[{w:"地区",r:"ちく",m:"Bölge"},{w:"区別",r:"くべつ",m:"Ayrım"},{w:"区域",r:"くいき",m:"Alan"}]},
+  {n:103,k:"情",on:["ジョウ","セイ"],kun:["なさ"],m:"Duygu / Durum",jlpt:"N3",ex:[{w:"感情",r:"かんじょう",m:"Duygu"},{w:"情報",r:"じょうほう",m:"Bilgi/Enformasyon"},{w:"事情",r:"じじょう",m:"Koşullar"}]},
+  {n:104,k:"報",on:["ホウ"],kun:["むく"],m:"Haber / Bildiri",jlpt:"N3",ex:[{w:"情報",r:"じょうほう",m:"Bilgi"},{w:"報告",r:"ほうこく",m:"Rapor"},{w:"予報",r:"よほう",m:"Tahmin"}]},
+  {n:105,k:"住",on:["ジュウ"],kun:["す"],m:"Yaşamak / İkamet",jlpt:"N3",ex:[{w:"住む",r:"すむ",m:"Yaşamak"},{w:"住所",r:"じゅうしょ",m:"Adres"},{w:"住民",r:"じゅうみん",m:"Sakin"}]},
+  {n:106,k:"平",on:["ヘイ","ビョウ"],kun:["たい","ひら"],m:"Düz / Barış",jlpt:"N3",ex:[{w:"平和",r:"へいわ",m:"Barış"},{w:"平均",r:"へいきん",m:"Ortalama"},{w:"平日",r:"へいじつ",m:"Hafta içi"}]},
+  {n:107,k:"記",on:["キ"],kun:["しる"],m:"Kayıt / Yazmak",jlpt:"N3",ex:[{w:"記事",r:"きじ",m:"Haber makalesi"},{w:"日記",r:"にっき",m:"Günlük"},{w:"記念",r:"きねん",m:"Anma"}]},
+  {n:108,k:"当",on:["トウ"],kun:["あ"],m:"İsabet / O",jlpt:"N3",ex:[{w:"当然",r:"とうぜん",m:"Doğal olarak"},{w:"担当",r:"たんとう",m:"Sorumlu"},{w:"本当",r:"ほんとう",m:"Gerçekten"}]},
+  {n:109,k:"男",on:["ダン","ナン"],kun:["おとこ"],m:"Erkek",jlpt:"N3",ex:[{w:"男性",r:"だんせい",m:"Erkek"},{w:"男の子",r:"おとこのこ",m:"Erkek çocuğu"},{w:"長男",r:"ちょうなん",m:"Büyük oğul"}]},
+  {n:110,k:"都",on:["ト","ツ"],kun:["みやこ"],m:"Metropol / Başkent",jlpt:"N3",ex:[{w:"東京都",r:"とうきょうと",m:"Tokyo Metropolü"},{w:"都市",r:"とし",m:"Şehir"},{w:"都合",r:"つごう",m:"Uygunluk"}]},
+  {n:111,k:"連",on:["レン"],kun:["つら","つ"],m:"Birbirine bağlı / Zincir",jlpt:"N3",ex:[{w:"連絡",r:"れんらく",m:"İletişim / Haber"},{w:"関連",r:"かんれん",m:"İlgili"},{w:"連続",r:"れんぞく",m:"Sürekli"}]},
+  {n:112,k:"対",on:["タイ","ツイ"],kun:["むか"],m:"Karşı / Çift",jlpt:"N3",ex:[{w:"対話",r:"たいわ",m:"Diyalog"},{w:"反対",r:"はんたい",m:"Karşı çıkma"},{w:"対策",r:"たいさく",m:"Tedbir"}]},
+  {n:113,k:"部",on:["ブ"],kun:["べ"],m:"Bölüm / Kısım",jlpt:"N3",ex:[{w:"部分",r:"ぶぶん",m:"Bölüm"},{w:"部活",r:"ぶかつ",m:"Kulüp aktivitesi"},{w:"全部",r:"ぜんぶ",m:"Hepsi"}]},
+  {n:114,k:"合",on:["ゴウ","ガッ","カッ"],kun:["あ"],m:"Birleşmek / Uyum",jlpt:"N3",ex:[{w:"場合",r:"ばあい",m:"Durum / Hal"},{w:"合格",r:"こうかく",m:"Geçme/Kabul"},{w:"試合",r:"しあい",m:"Maç"}]},
+  {n:115,k:"市",on:["シ"],kun:["いち"],m:"Şehir",jlpt:"N3",ex:[{w:"都市",r:"とし",m:"Şehir"},{w:"市役所",r:"しやくしょ",m:"Belediye"},{w:"市内",r:"しない",m:"Şehir içi"}]},
+  {n:116,k:"産",on:["サン"],kun:["う","うぶ"],m:"Doğum / Üretim",jlpt:"N3",ex:[{w:"生産",r:"せいさん",m:"Üretim"},{w:"財産",r:"ざいさん",m:"Mülk"},{w:"産業",r:"さんぎょう",m:"Endüstri"}]},
+  {n:117,k:"言",on:["ゲン","ゴン"],kun:["い","こと"],m:"Kelime / Söylemek",jlpt:"N3",ex:[{w:"発言",r:"はつげん",m:"Açıklama"},{w:"宣言",r:"せんげん",m:"İlan"},{w:"言語",r:"げんご",m:"Dil"}]},
+  {n:118,k:"共",on:["キョウ"],kun:["とも"],m:"Birlikte / Ortak",jlpt:"N3",ex:[{w:"共同",r:"きょうどう",m:"Ortak"},{w:"公共",r:"こうきょう",m:"Kamusal"},{w:"共に",r:"ともに",m:"Birlikte"}]},
+  {n:119,k:"内",on:["ナイ","ダイ"],kun:["うち"],m:"İçi / Dahili",jlpt:"N3",ex:[{w:"内容",r:"ないよう",m:"İçerik"},{w:"国内",r:"こくない",m:"Yurt içi"},{w:"室内",r:"しつない",m:"Kapalı alan"}]},
+  {n:120,k:"考",on:["コウ"],kun:["かんが"],m:"Düşünmek",jlpt:"N3",ex:[{w:"考える",r:"かんがえる",m:"Düşünmek"},{w:"考え方",r:"かんがえかた",m:"Düşünce şekli"},{w:"参考",r:"さんこう",m:"Referans"}]},
+  {n:121,k:"点",on:["テン"],kun:[""],m:"Nokta / Puan",jlpt:"N3",ex:[{w:"点数",r:"てんすう",m:"Puan"},{w:"問題点",r:"もんだいてん",m:"Sorunlu nokta"},{w:"観点",r:"かんてん",m:"Bakış açısı"}]},
+  {n:122,k:"化",on:["カ","ケ"],kun:["ば"],m:"Dönüşüm / -laşmak",jlpt:"N3",ex:[{w:"文化",r:"ぶんか",m:"Kültür"},{w:"変化",r:"へんか",m:"Değişim"},{w:"化学",r:"かがく",m:"Kimya"}]},
+  {n:123,k:"作",on:["サク","サ"],kun:["つく"],m:"Yaratmak / Oluşturmak",jlpt:"N3",ex:[{w:"作品",r:"さくひん",m:"Eser"},{w:"作る",r:"つくる",m:"Yapmak"},{w:"製作",r:"せいさく",m:"Yapım"}]},
+  {n:124,k:"所",on:["ショ","ジョ"],kun:["ところ"],m:"Yer",jlpt:"N3",ex:[{w:"場所",r:"ばしょ",m:"Yer"},{w:"住所",r:"じゅうしょ",m:"Adres"},{w:"研究所",r:"けんきゅうじょ",m:"Araştırma enstitüsü"}]},
+  {n:125,k:"起",on:["キ"],kun:["お"],m:"Kalkmak / Başlamak",jlpt:"N3",ex:[{w:"起きる",r:"おきる",m:"Kalkmak"},{w:"起こす",r:"おこす",m:"Uyandırmak"},{w:"起源",r:"きげん",m:"Köken"}]},
+  {n:126,k:"求",on:["キュウ"],kun:["もと"],m:"İstemek / Aramak",jlpt:"N3",ex:[{w:"要求",r:"ようきゅう",m:"Talep"},{w:"求める",r:"もとめる",m:"İstemek"},{w:"需要",r:"じゅよう",m:"İhtiyaç"}]},
+  {n:127,k:"小",on:["ショウ"],kun:["ちい","こ","お"],m:"Küçük",jlpt:"N3",ex:[{w:"縮小",r:"しゅくしょう",m:"Küçültme"},{w:"小さな",r:"ちいさな",m:"Küçük"},{w:"小屋",r:"こや",m:"Kulübe"}]},
+  {n:128,k:"員",on:["イン"],kun:[""],m:"Üye",jlpt:"N3",ex:[{w:"委員",r:"いいん",m:"Komite üyesi"},{w:"全員",r:"ぜんいん",m:"Tüm üyeler"},{w:"教員",r:"きょういん",m:"Öğretim üyesi"}]},
+  {n:129,k:"会",on:["カイ","エ"],kun:["あ"],m:"Toplantı / Buluşma",jlpt:"N3",ex:[{w:"学会",r:"がっかい",m:"Akademik dernek"},{w:"機会",r:"きかい",m:"Fırsat"},{w:"国会",r:"こっかい",m:"Meclis"}]},
+  {n:130,k:"変",on:["ヘン"],kun:["か"],m:"Değişmek / Garip",jlpt:"N3",ex:[{w:"変わる",r:"かわる",m:"Değişmek"},{w:"変化",r:"へんか",m:"Değişim"},{w:"大変",r:"たいへん",m:"Zor / Çok"}]},
+  {n:131,k:"完",on:["カン"],kun:[""],m:"Tamamlanmak",jlpt:"N3",ex:[{w:"完全",r:"かんぜん",m:"Mükemmel"},{w:"完成",r:"かんせい",m:"Tamamlanma"},{w:"完了",r:"かんりょう",m:"Bitiş"}]},
+  {n:132,k:"式",on:["シキ"],kun:[""],m:"Biçim / Tören",jlpt:"N3",ex:[{w:"方式",r:"ほうしき",m:"Yöntem"},{w:"正式",r:"せいしき",m:"Resmi"},{w:"式典",r:"しきてん",m:"Tören"}]},
+  {n:133,k:"家",on:["カ","ケ"],kun:["いえ","や"],m:"Ev / Aile",jlpt:"N3",ex:[{w:"家族",r:"かぞく",m:"Aile"},{w:"家庭",r:"かてい",m:"Ev/Aile"},{w:"作家",r:"さっか",m:"Yazar"}]},
+  {n:134,k:"実",on:["ジツ"],kun:["み","みの"],m:"Gerçek / Meyve",jlpt:"N3",ex:[{w:"実は",r:"じつは",m:"Aslında"},{w:"実現",r:"じつげん",m:"Gerçekleşme"},{w:"事実",r:"じじつ",m:"Gerçek"}]},
+  {n:135,k:"感",on:["カン"],kun:[""],m:"Hissetmek",jlpt:"N3",ex:[{w:"感じる",r:"かんじる",m:"Hissetmek"},{w:"感謝",r:"かんしゃ",m:"Şükran"},{w:"感情",r:"かんじょう",m:"Duygu"}]},
+  {n:136,k:"意",on:["イ"],kun:[""],m:"Niyet / Anlam",jlpt:"N3",ex:[{w:"意味",r:"いみ",m:"Anlam"},{w:"意見",r:"いけん",m:"Fikir"},{w:"注意",r:"ちゅうい",m:"Dikkat"}]},
+  {n:137,k:"仕",on:["シ","ジ"],kun:["つか"],m:"Hizmet etmek",jlpt:"N3",ex:[{w:"仕事",r:"しごと",m:"İş"},{w:"仕方",r:"しかた",m:"Yöntem"},{w:"奉仕",r:"ほうし",m:"Hizmet"}]},
+  {n:138,k:"重",on:["ジュウ","チョウ"],kun:["おも","かさ"],m:"Ağır / Katmanlar",jlpt:"N3",ex:[{w:"重要",r:"じゅうよう",m:"Önemli"},{w:"重い",r:"おもい",m:"Ağır"},{w:"二重",r:"にじゅう",m:"Çift kat"}]},
+  {n:139,k:"役",on:["ヤク","エキ"],kun:[""],m:"Rol / Hizmet",jlpt:"N3",ex:[{w:"役立つ",r:"やくだつ",m:"Faydalı olmak"},{w:"役所",r:"やくしょ",m:"Kamu dairesi"},{w:"主役",r:"しゅやく",m:"Baş rol"}]},
+  {n:140,k:"決",on:["ケツ"],kun:["き"],m:"Karar vermek",jlpt:"N3",ex:[{w:"決める",r:"きめる",m:"Karar vermek"},{w:"決定",r:"けってい",m:"Karar"},{w:"解決",r:"かいけつ",m:"Çözüm"}]},
+  {n:141,k:"流",on:["リュウ","ル"],kun:["なが"],m:"Akmak / Akım",jlpt:"N3",ex:[{w:"流れる",r:"ながれる",m:"Akmak"},{w:"交流",r:"こうりゅう",m:"Alışveriş"},{w:"流行",r:"りゅうこう",m:"Trend/Moda"}]},
+  {n:142,k:"通",on:["ツウ","ツ"],kun:["とお","かよ"],m:"Geçmek / Ulaşmak",jlpt:"N3",ex:[{w:"通じる",r:"つうじる",m:"İletmek"},{w:"交通",r:"こうつう",m:"Ulaşım"},{w:"通学",r:"つうがく",m:"Okula gidip gelmek"}]},
+  {n:143,k:"用",on:["ヨウ"],kun:["もち"],m:"Kullanmak",jlpt:"N3",ex:[{w:"使用",r:"しよう",m:"Kullanım"},{w:"費用",r:"ひよう",m:"Harcama"},{w:"用語",r:"ようご",m:"Terminoloji"}]},
+  {n:144,k:"準",on:["ジュン"],kun:["なぞら"],m:"Standart / Hazırlık",jlpt:"N3",ex:[{w:"準備",r:"じゅんび",m:"Hazırlık"},{w:"基準",r:"きじゅん",m:"Standart"},{w:"水準",r:"すいじゅん",m:"Seviye"}]},
+  {n:145,k:"共",on:["キョウ"],kun:["とも"],m:"Birlikte",jlpt:"N3",ex:[{w:"共通",r:"きょうつう",m:"Ortak"},{w:"共有",r:"きょうゆう",m:"Paylaşım"},{w:"共同",r:"きょうどう",m:"Ortak"}]},
+  {n:146,k:"欧",on:["オウ"],kun:[""],m:"Avrupa",jlpt:"N3",ex:[{w:"欧州",r:"おうしゅう",m:"Avrupa"},{w:"欧米",r:"おうべい",m:"Avrupa ve Amerika"},{w:"東欧",r:"とうおう",m:"Doğu Avrupa"}]},
+  {n:147,k:"担",on:["タン"],kun:["かつ","にな"],m:"Taşımak / Sorumluluk",jlpt:"N3",ex:[{w:"担当",r:"たんとう",m:"Sorumlu"},{w:"負担",r:"ふたん",m:"Yük"},{w:"担ぐ",r:"かつぐ",m:"Omzuna almak"}]},
+  {n:148,k:"係",on:["ケイ"],kun:["かか"],m:"İlgi / Görevli",jlpt:"N3",ex:[{w:"関係",r:"かんけい",m:"İlişki"},{w:"係員",r:"かかりいん",m:"Görevli"},{w:"係長",r:"かかりちょう",m:"Bölüm şefi"}]},
+  {n:149,k:"名",on:["メイ","ミョウ"],kun:["な"],m:"İsim / Ünlü",jlpt:"N3",ex:[{w:"名前",r:"なまえ",m:"İsim"},{w:"名所",r:"めいしょ",m:"Ünlü yer"},{w:"有名",r:"ゆうめい",m:"Ünlü"}]},
+  {n:150,k:"勝",on:["ショウ"],kun:["か","まさ"],m:"Kazanmak",jlpt:"N3",ex:[{w:"勝つ",r:"かつ",m:"Kazanmak"},{w:"勝利",r:"しょうり",m:"Zafer"},{w:"優勝",r:"ゆうしょう",m:"Şampiyonluk"}]},
+
+  // N2-N1 (devam)
+  {n:151,k:"個",on:["コ"],kun:[""],m:"Birim / Parça sayacı",jlpt:"N2",ex:[{w:"個人",r:"こじん",m:"Bireysel"},{w:"個性",r:"こせい",m:"Kişilik"},{w:"数個",r:"すうこ",m:"Birkaç adet"}]},
+  {n:152,k:"果",on:["カ"],kun:["は","はて"],m:"Meyve / Sonuç",jlpt:"N2",ex:[{w:"結果",r:"けっか",m:"Sonuç"},{w:"果物",r:"くだもの",m:"Meyve"},{w:"果たす",r:"はたす",m:"Yerine getirmek"}]},
+  {n:153,k:"相",on:["ソウ","ショウ"],kun:["あい"],m:"Karşılıklı / Görünüş",jlpt:"N2",ex:[{w:"相談",r:"そうだん",m:"Danışma"},{w:"首相",r:"しゅしょう",m:"Başbakan"},{w:"相手",r:"あいて",m:"Karşı taraf"}]},
+  {n:154,k:"組",on:["ソ"],kun:["く","くみ"],m:"Grup / Birleştirmek",jlpt:"N2",ex:[{w:"組織",r:"そしき",m:"Organizasyon"},{w:"番組",r:"ばんぐみ",m:"Program (TV)"},{w:"組み合わせ",r:"くみあわせ",m:"Kombinasyon"}]},
+  {n:155,k:"支",on:["シ"],kun:["ささ"],m:"Desteklemek / Dal",jlpt:"N2",ex:[{w:"支援",r:"しえん",m:"Destek"},{w:"支持",r:"しじ",m:"Destek"},{w:"支払う",r:"しはらう",m:"Ödemek"}]},
+  {n:156,k:"数",on:["スウ"],kun:["かず"],m:"Sayı",jlpt:"N2",ex:[{w:"多数",r:"たすう",m:"Çoğunluk"},{w:"少数",r:"しょうすう",m:"Azınlık"},{w:"数字",r:"すうじ",m:"Rakam"}]},
+  {n:157,k:"論",on:["ロン"],kun:[""],m:"Tartışmak / Teori",jlpt:"N2",ex:[{w:"議論",r:"ぎろん",m:"Tartışma"},{w:"理論",r:"りろん",m:"Teori"},{w:"結論",r:"けつろん",m:"Sonuç"}]},
+  {n:158,k:"拡",on:["カク"],kun:["ひろ"],m:"Genişlemek",jlpt:"N2",ex:[{w:"拡大",r:"かくだい",m:"Genişleme"},{w:"拡張",r:"かくちょう",m:"Uzantı"},{w:"拡散",r:"かくさん",m:"Yayılma"}]},
+  {n:159,k:"技",on:["ギ"],kun:["わざ"],m:"Beceri / Teknik",jlpt:"N2",ex:[{w:"技術",r:"ぎじゅつ",m:"Teknoloji/Teknik"},{w:"技能",r:"ぎのう",m:"Beceri"},{w:"競技",r:"きょうぎ",m:"Rekabet/Spor"}]},
+  {n:160,k:"医",on:["イ"],kun:[""],m:"Tıp / Doktor",jlpt:"N2",ex:[{w:"医者",r:"いしゃ",m:"Doktor"},{w:"医療",r:"いりょう",m:"Tıbbi bakım"},{w:"医学",r:"いがく",m:"Tıp bilimi"}]},
+  {n:161,k:"受",on:["ジュ"],kun:["う"],m:"Almak / Kabul etmek",jlpt:"N2",ex:[{w:"受ける",r:"うける",m:"Almak"},{w:"受験",r:"じゅけん",m:"Sınava girmek"},{w:"受付",r:"うけつけ",m:"Resepsiyon"}]},
+  {n:162,k:"取",on:["シュ"],kun:["と"],m:"Almak / Tutmak",jlpt:"N2",ex:[{w:"取る",r:"とる",m:"Almak"},{w:"取引",r:"とりひき",m:"İşlem"},{w:"受け取る",r:"うけとる",m:"Teslim almak"}]},
+  {n:163,k:"込",on:[""],kun:["こ"],m:"İçine / Dalmak",jlpt:"N2",ex:[{w:"申し込む",r:"もうしこむ",m:"Başvurmak"},{w:"込む",r:"こむ",m:"Kalabalık olmak"},{w:"持ち込む",r:"もちこむ",m:"İçine taşımak"}]},
+  {n:164,k:"品",on:["ヒン","ホン"],kun:["しな"],m:"Ürün / Kalite",jlpt:"N2",ex:[{w:"商品",r:"しょうひん",m:"Ürün"},{w:"品質",r:"ひんしつ",m:"Kalite"},{w:"作品",r:"さくひん",m:"Eser"}]},
+  {n:165,k:"高",on:["コウ"],kun:["たか"],m:"Yüksek / Pahalı",jlpt:"N2",ex:[{w:"高度",r:"こうど",m:"Yükseklik/Düzey"},{w:"向上",r:"こうじょう",m:"Gelişme"},{w:"高齢",r:"こうれい",m:"Yaşlılık"}]},
+  {n:166,k:"世",on:["セイ","セ"],kun:["よ"],m:"Dünya / Nesil",jlpt:"N2",ex:[{w:"世界",r:"せかい",m:"Dünya"},{w:"世紀",r:"せいき",m:"Yüzyıl"},{w:"世論",r:"せろん",m:"Kamuoyu"}]},
+  {n:167,k:"確",on:["カク"],kun:["たし"],m:"Kesin / Doğrulamak",jlpt:"N2",ex:[{w:"確認",r:"かくにん",m:"Doğrulama"},{w:"確実",r:"かくじつ",m:"Kesin"},{w:"正確",r:"せいかく",m:"Doğru/Kesin"}]},
+  {n:168,k:"提",on:["テイ"],kun:["さ"],m:"Sunmak / Teklif etmek",jlpt:"N2",ex:[{w:"提案",r:"ていあん",m:"Öneri"},{w:"提供",r:"ていきょう",m:"Sağlama"},{w:"前提",r:"ぜんてい",m:"Ön koşul"}]},
+  {n:169,k:"段",on:["ダン"],kun:[""],m:"Adım / Basamak",jlpt:"N2",ex:[{w:"段階",r:"だんかい",m:"Aşama"},{w:"手段",r:"しゅだん",m:"Araç/Yöntem"},{w:"階段",r:"かいだん",m:"Merdiven"}]},
+  {n:170,k:"比",on:["ヒ"],kun:["くら"],m:"Karşılaştırmak",jlpt:"N2",ex:[{w:"比べる",r:"くらべる",m:"Karşılaştırmak"},{w:"比較",r:"ひかく",m:"Karşılaştırma"},{w:"比率",r:"ひりつ",m:"Oran"}]},
+  {n:171,k:"価",on:["カ"],kun:["あたい"],m:"Değer / Fiyat",jlpt:"N2",ex:[{w:"価格",r:"かかく",m:"Fiyat"},{w:"価値",r:"かち",m:"Değer"},{w:"物価",r:"ぶっか",m:"Fiyat seviyeleri"}]},
+  {n:172,k:"増",on:["ゾウ"],kun:["ふ","ま"],m:"Artmak",jlpt:"N2",ex:[{w:"増える",r:"ふえる",m:"Artmak"},{w:"増加",r:"ぞうか",m:"Artış"},{w:"急増",r:"きゅうぞう",m:"Ani artış"}]},
+  {n:173,k:"著",on:["チョ","チャク"],kun:["あらわ","いちじる"],m:"Belirgin / Yazmak",jlpt:"N2",ex:[{w:"著者",r:"ちょしゃ",m:"Yazar"},{w:"著名",r:"ちょめい",m:"Ünlü"},{w:"著しい",r:"いちじるしい",m:"Belirgin"}]},
+  {n:174,k:"基",on:["キ"],kun:["もと"],m:"Temel",jlpt:"N2",ex:[{w:"基本",r:"きほん",m:"Temel"},{w:"基準",r:"きじゅん",m:"Standart"},{w:"基礎",r:"きそ",m:"Temel"}]},
+  {n:175,k:"保",on:["ホ","ホウ"],kun:["たも"],m:"Korumak / Sürdürmek",jlpt:"N2",ex:[{w:"保護",r:"ほご",m:"Koruma"},{w:"確保",r:"かくほ",m:"Güvence altına alma"},{w:"保険",r:"ほけん",m:"Sigorta"}]},
+  {n:176,k:"目",on:["モク"],kun:["め"],m:"Göz / Madde",jlpt:"N2",ex:[{w:"項目",r:"こうもく",m:"Madde"},{w:"目標",r:"もくひょう",m:"Hedef"},{w:"目指す",r:"めざす",m:"Hedeflemek"}]},
+  {n:177,k:"的",on:["テキ"],kun:["まと"],m:"-sal / Hedef",jlpt:"N2",ex:[{w:"目的",r:"もくてき",m:"Amaç"},{w:"的確",r:"てきかく",m:"Doğru/Kesin"},{w:"具体的",r:"ぐたいてき",m:"Somut"}]},
+  {n:178,k:"議",on:["ギ"],kun:[""],m:"Tartışmak / Toplantı",jlpt:"N2",ex:[{w:"会議",r:"かいぎ",m:"Toplantı"},{w:"議論",r:"ぎろん",m:"Tartışma"},{w:"国会議員",r:"こっかいぎいん",m:"Parlamenter"}]},
+  {n:179,k:"法",on:["ホウ","ハッ","ホッ"],kun:[""],m:"Yasa / Yöntem",jlpt:"N2",ex:[{w:"方法",r:"ほうほう",m:"Yöntem"},{w:"法律",r:"ほうりつ",m:"Hukuk"},{w:"文法",r:"ぶんぽう",m:"Gramer"}]},
+  {n:180,k:"際",on:["サイ"],kun:["きわ"],m:"Kenar / Durum / Sırasında",jlpt:"N2",ex:[{w:"国際",r:"こくさい",m:"Uluslararası"},{w:"実際",r:"じっさい",m:"Gerçekte"},{w:"際に",r:"さいに",m:"Sırasında"}]},
+  {n:181,k:"格",on:["カク","コウ"],kun:[""],m:"Statü / Kural",jlpt:"N2",ex:[{w:"合格",r:"ごうかく",m:"Geçme/Kabul"},{w:"資格",r:"しかく",m:"Nitelik"},{w:"性格",r:"せいかく",m:"Kişilik"}]},
+  {n:182,k:"属",on:["ゾク"],kun:[""],m:"Ait olmak",jlpt:"N2",ex:[{w:"所属",r:"しょぞく",m:"Üyelik"},{w:"金属",r:"きんぞく",m:"Metal"},{w:"属する",r:"ぞくする",m:"Ait olmak"}]},
+  {n:183,k:"幸",on:["コウ"],kun:["さち","しあわ"],m:"Mutluluk",jlpt:"N2",ex:[{w:"幸せ",r:"しあわせ",m:"Mutlu"},{w:"幸運",r:"こううん",m:"Şans"},{w:"不幸",r:"ふこう",m:"Mutsuzluk"}]},
+  {n:184,k:"断",on:["ダン"],kun:["こと","た"],m:"Kesmek / Reddetmek",jlpt:"N2",ex:[{w:"判断",r:"はんだん",m:"Karar"},{w:"断る",r:"ことわる",m:"Reddetmek"},{w:"断定",r:"だんてい",m:"Kesin karar"}]},
+  {n:185,k:"案",on:["アン"],kun:[""],m:"Plan / Öneri",jlpt:"N2",ex:[{w:"提案",r:"ていあん",m:"Öneri"},{w:"案内",r:"あんない",m:"Rehberlik"},{w:"原案",r:"げんあん",m:"Orijinal plan"}]},
+  {n:186,k:"果",on:["カ"],kun:["はて","は"],m:"Meyve / Sonuç",jlpt:"N2",ex:[{w:"成果",r:"せいか",m:"Başarı"},{w:"効果",r:"こうか",m:"Etki"},{w:"果敢",r:"かかん",m:"Cesur"}]},
+  {n:187,k:"向",on:["コウ"],kun:["む"],m:"Yönelmek",jlpt:"N2",ex:[{w:"方向",r:"ほうこう",m:"Yön"},{w:"傾向",r:"けいこう",m:"Eğilim"},{w:"向かう",r:"むかう",m:"Yönelmek"}]},
+  {n:188,k:"際",on:["サイ"],kun:["きわ"],m:"Fırsat / Sırasında",jlpt:"N2",ex:[{w:"この際",r:"このさい",m:"Bu fırsatta"},{w:"交際",r:"こうさい",m:"Sosyal ilişkiler"},{w:"際立つ",r:"きわだつ",m:"Öne çıkmak"}]},
+  {n:189,k:"環",on:["カン"],kun:[""],m:"Halka / Çevre",jlpt:"N2",ex:[{w:"環境",r:"かんきょう",m:"Çevre"},{w:"環",r:"かん",m:"Halka"},{w:"好循環",r:"こうじゅんかん",m:"İyi döngü"}]},
+  {n:190,k:"境",on:["キョウ"],kun:["さかい"],m:"Sınır / Ortam",jlpt:"N2",ex:[{w:"環境",r:"かんきょう",m:"Çevre"},{w:"国境",r:"こっきょう",m:"Sınır"},{w:"境界",r:"きょうかい",m:"Sınır"}]},
+  {n:191,k:"税",on:["ゼイ"],kun:[""],m:"Vergi",jlpt:"N2",ex:[{w:"税金",r:"ぜいきん",m:"Vergi"},{w:"消費税",r:"しょうひぜい",m:"Tüketim vergisi"},{w:"所得税",r:"しょとくぜい",m:"Gelir vergisi"}]},
+  {n:192,k:"師",on:["シ"],kun:[""],m:"Usta / Öğretmen",jlpt:"N2",ex:[{w:"医師",r:"いし",m:"Doktor"},{w:"教師",r:"きょうし",m:"Öğretmen"},{w:"師匠",r:"ししょう",m:"Usta"}]},
+  {n:193,k:"要",on:["ヨウ"],kun:["い","かなめ"],m:"Gerekli / Gereksinim",jlpt:"N2",ex:[{w:"重要",r:"じゅうよう",m:"Önemli"},{w:"必要",r:"ひつよう",m:"Gerekli"},{w:"要求",r:"ようきゅう",m:"Talep"}]},
+  {n:194,k:"超",on:["チョウ"],kun:["こ"],m:"Aşmak / Süper",jlpt:"N2",ex:[{w:"超える",r:"こえる",m:"Aşmak"},{w:"超過",r:"ちょうか",m:"Fazla"},{w:"超人",r:"ちょうじん",m:"Süper insan"}]},
+  {n:195,k:"験",on:["ケン","ゲン"],kun:[""],m:"Deneyim / Sınav",jlpt:"N2",ex:[{w:"経験",r:"けいけん",m:"Deneyim"},{w:"試験",r:"しけん",m:"Sınav"},{w:"実験",r:"じっけん",m:"Deney"}]},
+  {n:196,k:"困",on:["コン"],kun:["こま"],m:"Zorluk / Sıkıntı",jlpt:"N2",ex:[{w:"困る",r:"こまる",m:"Zorunda kalmak"},{w:"困難",r:"こんなん",m:"Güçlük"},{w:"貧困",r:"ひんこん",m:"Yoksulluk"}]},
+  {n:197,k:"敗",on:["ハイ"],kun:["やぶ"],m:"Yenilgi",jlpt:"N2",ex:[{w:"失敗",r:"しっぱい",m:"Başarısızlık"},{w:"敗北",r:"はいぼく",m:"Yenilgi"},{w:"勝敗",r:"しょうはい",m:"Kazanma ve kaybetme"}]},
+  {n:198,k:"功",on:["コウ","ク"],kun:[""],m:"Başarı / Erdem",jlpt:"N2",ex:[{w:"成功",r:"せいこう",m:"Başarı"},{w:"功績",r:"こうせき",m:"Başarı"},{w:"功能",r:"こうのう",m:"Etkinlik"}]},
+  {n:199,k:"効",on:["コウ"],kun:["き"],m:"Etkili",jlpt:"N2",ex:[{w:"効果",r:"こうか",m:"Etki"},{w:"有効",r:"ゆうこう",m:"Geçerli"},{w:"効率",r:"こうりつ",m:"Verimlilik"}]},
+  {n:200,k:"益",on:["エキ","ヤク"],kun:["ます"],m:"Fayda / Kazanç",jlpt:"N2",ex:[{w:"利益",r:"りえき",m:"Kâr"},{w:"便益",r:"べんえき",m:"Fayda"},{w:"収益",r:"しゅうえき",m:"Gelir"}]},
+
+  // 201-300
+  {n:201,k:"危",on:["キ"],kun:["あぶ","あや"],m:"Tehlike",jlpt:"N2",ex:[{w:"危険",r:"きけん",m:"Tehlikeli"},{w:"危機",r:"きき",m:"Kriz"},{w:"危ない",r:"あぶない",m:"Tehlikeli"}]},
+  {n:202,k:"率",on:["リツ","ソツ"],kun:["ひき"],m:"Oran / Liderlik",jlpt:"N2",ex:[{w:"効率",r:"こうりつ",m:"Verimlilik"},{w:"確率",r:"かくりつ",m:"Olasılık"},{w:"割合",r:"わりあい",m:"Oran"}]},
+  {n:203,k:"収",on:["シュウ"],kun:["おさ"],m:"Toplamak / Gelir",jlpt:"N2",ex:[{w:"収入",r:"しゅうにゅう",m:"Gelir"},{w:"収集",r:"しゅうしゅう",m:"Toplama"},{w:"回収",r:"かいしゅう",m:"Geri toplama"}]},
+  {n:204,k:"減",on:["ゲン"],kun:["へ"],m:"Azalmak",jlpt:"N2",ex:[{w:"減る",r:"へる",m:"Azalmak"},{w:"削減",r:"さくげん",m:"Kesinti"},{w:"急減",r:"きゅうげん",m:"Ani düşüş"}]},
+  {n:205,k:"供",on:["キョウ","ク"],kun:["とも"],m:"Sağlamak / Eşlik etmek",jlpt:"N2",ex:[{w:"提供",r:"ていきょう",m:"Sağlama"},{w:"子供",r:"こども",m:"Çocuk"},{w:"供給",r:"きょうきゅう",m:"Arz"}]},
+  {n:206,k:"認",on:["ニン"],kun:["みと"],m:"Tanımak / Onaylamak",jlpt:"N2",ex:[{w:"認める",r:"みとめる",m:"Kabul etmek"},{w:"確認",r:"かくにん",m:"Doğrulama"},{w:"認識",r:"にんしき",m:"Tanıma"}]},
+  {n:207,k:"設",on:["セツ"],kun:["もう"],m:"Kurmak / Tesis",jlpt:"N2",ex:[{w:"設定",r:"せってい",m:"Ayar"},{w:"設立",r:"せつりつ",m:"Kuruluş"},{w:"施設",r:"しせつ",m:"Tesis"}]},
+  {n:208,k:"解",on:["カイ","ゲ"],kun:["と"],m:"Çözmek / Anlamak",jlpt:"N2",ex:[{w:"理解",r:"りかい",m:"Anlama"},{w:"解決",r:"かいけつ",m:"Çözüm"},{w:"解説",r:"かいせつ",m:"Açıklama"}]},
+  {n:209,k:"選",on:["セン"],kun:["えら"],m:"Seçmek",jlpt:"N2",ex:[{w:"選ぶ",r:"えらぶ",m:"Seçmek"},{w:"選手",r:"せんしゅ",m:"Sporcu"},{w:"当選",r:"とうせん",m:"Seçilme"}]},
+  {n:210,k:"課",on:["カ"],kun:[""],m:"Bölüm / Ders / Vergi",jlpt:"N2",ex:[{w:"課題",r:"かだい",m:"Ödev/Sorun"},{w:"担当課",r:"たんとうか",m:"İlgili birim"},{w:"課長",r:"かちょう",m:"Bölüm müdürü"}]},
+  {n:211,k:"責",on:["セキ"],kun:["せ"],m:"Sorumluluk",jlpt:"N2",ex:[{w:"責任",r:"せきにん",m:"Sorumluluk"},{w:"責める",r:"せめる",m:"Suçlamak"},{w:"自責",r:"じせき",m:"Kendini suçlama"}]},
+  {n:212,k:"努",on:["ド"],kun:["つと"],m:"Çabalamak",jlpt:"N2",ex:[{w:"努力",r:"どりょく",m:"Çaba"},{w:"努める",r:"つとめる",m:"Çabalamak"},{w:"",r:"",m:""}]},
+  {n:213,k:"評",on:["ヒョウ"],kun:[""],m:"Değerlendirmek",jlpt:"N2",ex:[{w:"評価",r:"ひょうか",m:"Değerlendirme"},{w:"批評",r:"ひひょう",m:"Eleştiri"},{w:"好評",r:"こうひょう",m:"İyi değerlendirme"}]},
+  {n:214,k:"望",on:["ボウ","モウ"],kun:["のぞ"],m:"Ümit / Arzulamak",jlpt:"N2",ex:[{w:"希望",r:"きぼう",m:"Umut"},{w:"望む",r:"のぞむ",m:"Arzulamak"},{w:"失望",r:"しつぼう",m:"Hayal kırıklığı"}]},
+  {n:215,k:"測",on:["ソク"],kun:["はか"],m:"Ölçmek",jlpt:"N2",ex:[{w:"測る",r:"はかる",m:"Ölçmek"},{w:"観測",r:"かんそく",m:"Gözlem"},{w:"予測",r:"よそく",m:"Tahmin"}]},
+  {n:216,k:"費",on:["ヒ"],kun:["つい"],m:"Harcamak / Masraf",jlpt:"N2",ex:[{w:"費用",r:"ひよう",m:"Masraf"},{w:"消費",r:"しょうひ",m:"Tüketim"},{w:"学費",r:"がくひ",m:"Okul masrafı"}]},
+  {n:217,k:"産",on:["サン"],kun:["う","うぶ"],m:"Üretmek / Doğum",jlpt:"N2",ex:[{w:"不動産",r:"ふどうさん",m:"Gayrimenkul"},{w:"生産性",r:"せいさんせい",m:"Verimlilik"},{w:"出産",r:"しゅっさん",m:"Doğum"}]},
+  {n:218,k:"権",on:["ケン","ゴン"],kun:[""],m:"Hak / Güç",jlpt:"N2",ex:[{w:"権利",r:"けんり",m:"Hak"},{w:"人権",r:"じんけん",m:"İnsan hakları"},{w:"政権",r:"せいけん",m:"Siyasi güç"}]},
+  {n:219,k:"済",on:["サイ"],kun:["す"],m:"Kurtarmak / Tamamlamak",jlpt:"N2",ex:[{w:"経済",r:"けいざい",m:"Ekonomi"},{w:"済む",r:"すむ",m:"Bitmek"},{w:"返済",r:"へんさい",m:"Geri ödeme"}]},
+  {n:220,k:"輸",on:["ユ"],kun:[""],m:"Taşımak",jlpt:"N2",ex:[{w:"輸出",r:"ゆしゅつ",m:"İhracat"},{w:"輸入",r:"ゆにゅう",m:"İthalat"},{w:"運輸",r:"うんゆ",m:"Taşımacılık"}]},
+  {n:221,k:"導",on:["ドウ"],kun:["みちび"],m:"Yönlendirmek",jlpt:"N2",ex:[{w:"指導",r:"しどう",m:"Rehberlik"},{w:"導く",r:"みちびく",m:"Yönlendirmek"},{w:"主導",r:"しゅどう",m:"Önderlik"}]},
+  {n:222,k:"展",on:["テン"],kun:[""],m:"Açmak / Sergi",jlpt:"N2",ex:[{w:"発展",r:"はってん",m:"Gelişme"},{w:"展示",r:"てんじ",m:"Sergi"},{w:"展開",r:"てんかい",m:"Gelişme"}]},
+  {n:223,k:"協",on:["キョウ"],kun:[""],m:"İşbirliği",jlpt:"N2",ex:[{w:"協力",r:"きょうりょく",m:"İşbirliği"},{w:"協定",r:"きょうてい",m:"Anlaşma"},{w:"協議",r:"きょうぎ",m:"Müzakere"}]},
+  {n:224,k:"覚",on:["カク"],kun:["おぼ","さ"],m:"Hatırlamak / Uyandırmak",jlpt:"N2",ex:[{w:"覚える",r:"おぼえる",m:"Ezberlemek"},{w:"目覚める",r:"めざめる",m:"Uyanmak"},{w:"感覚",r:"かんかく",m:"Duygu/His"}]},
+  {n:225,k:"勢",on:["セイ"],kun:["いきお"],m:"Güç / Eğilim",jlpt:"N2",ex:[{w:"態勢",r:"たいせい",m:"Duruş/Hazır olma"},{w:"勢力",r:"せいりょく",m:"Güç"},{w:"勢い",r:"いきおい",m:"Momentum"}]},
+  {n:226,k:"額",on:["ガク"],kun:["ひたい"],m:"Miktar / Alın",jlpt:"N2",ex:[{w:"金額",r:"きんがく",m:"Miktar (para)"},{w:"総額",r:"そうがく",m:"Toplam miktar"},{w:"額縁",r:"がくぶち",m:"Çerçeve"}]},
+  {n:227,k:"援",on:["エン"],kun:[""],m:"Yardım / Destek",jlpt:"N2",ex:[{w:"支援",r:"しえん",m:"Destek"},{w:"応援",r:"おうえん",m:"Teşvik"},{w:"援助",r:"えんじょ",m:"Yardım"}]},
+  {n:228,k:"宅",on:["タク"],kun:[""],m:"Ev / İkamet",jlpt:"N2",ex:[{w:"自宅",r:"じたく",m:"Kendi evi"},{w:"宅配",r:"たくはい",m:"Ev teslimatı"},{w:"帰宅",r:"きたく",m:"Eve dönme"}]},
+  {n:229,k:"割",on:["カツ"],kun:["わ"],m:"Bölmek / Oran",jlpt:"N2",ex:[{w:"割合",r:"わりあい",m:"Oran"},{w:"割引",r:"わりびき",m:"İndirim"},{w:"役割",r:"やくわり",m:"Rol"}]},
+  {n:230,k:"宣",on:["セン"],kun:[""],m:"Ilan etmek",jlpt:"N2",ex:[{w:"宣言",r:"せんげん",m:"İlan"},{w:"宣伝",r:"せんでん",m:"Reklam"},{w:"宣告",r:"せんこく",m:"Bildiri"}]},
+  {n:231,k:"推",on:["スイ"],kun:["お"],m:"İtmek / Tahmin",jlpt:"N2",ex:[{w:"推測",r:"すいそく",m:"Tahmin"},{w:"推薦",r:"すいせん",m:"Tavsiye"},{w:"推進",r:"すいしん",m:"İlerleme"}]},
+  {n:232,k:"採",on:["サイ"],kun:["と"],m:"Toplamak / İşe almak",jlpt:"N2",ex:[{w:"採用",r:"さいよう",m:"İşe alma"},{w:"採択",r:"さいたく",m:"Benimseme"},{w:"採点",r:"さいてん",m:"Puanlama"}]},
+  {n:233,k:"構",on:["コウ"],kun:["かまえ","かま"],m:"Yapı / Çerçeve",jlpt:"N2",ex:[{w:"構造",r:"こうぞう",m:"Yapı"},{w:"機構",r:"きこう",m:"Mekanizma"},{w:"構成",r:"こうせい",m:"Kompozisyon"}]},
+  {n:234,k:"置",on:["チ"],kun:["お"],m:"Koymak / Bırakmak",jlpt:"N2",ex:[{w:"位置",r:"いち",m:"Konum"},{w:"置く",r:"おく",m:"Koymak"},{w:"設置",r:"せっち",m:"Kurulum"}]},
+  {n:235,k:"接",on:["セツ"],kun:["つ"],m:"Bağlamak / Temas",jlpt:"N2",ex:[{w:"接続",r:"せつぞく",m:"Bağlantı"},{w:"直接",r:"ちょくせつ",m:"Doğrudan"},{w:"接触",r:"せっしょく",m:"Temas"}]},
+  {n:236,k:"触",on:["ショク"],kun:["ふ"],m:"Dokunmak",jlpt:"N2",ex:[{w:"接触",r:"せっしょく",m:"Temas"},{w:"触れる",r:"ふれる",m:"Dokunmak"},{w:"感触",r:"かんしょく",m:"Hissetme"}]},
+  {n:237,k:"念",on:["ネン"],kun:[""],m:"Düşünce / Dilek",jlpt:"N2",ex:[{w:"記念",r:"きねん",m:"Anma"},{w:"残念",r:"ざんねん",m:"Yazık"},{w:"概念",r:"がいねん",m:"Kavram"}]},
+  {n:238,k:"否",on:["ヒ"],kun:["いな"],m:"Hayır / Reddetmek",jlpt:"N2",ex:[{w:"否定",r:"ひてい",m:"İnkâr"},{w:"可否",r:"かひ",m:"Olumlu olumsuz"},{w:"否決",r:"ひけつ",m:"Ret"}]},
+  {n:239,k:"追",on:["ツイ"],kun:["お"],m:"Kovalamak / Takip etmek",jlpt:"N2",ex:[{w:"追う",r:"おう",m:"Kovalamak"},{w:"追加",r:"ついか",m:"Ekleme"},{w:"追跡",r:"ついせき",m:"Takip"}]},
+  {n:240,k:"争",on:["ソウ"],kun:["あらそ"],m:"Çatışmak / Rekabet",jlpt:"N2",ex:[{w:"競争",r:"きょうそう",m:"Rekabet"},{w:"戦争",r:"せんそう",m:"Savaş"},{w:"争う",r:"あらそう",m:"Tartışmak"}]},
+  {n:241,k:"存",on:["ソン","ゾン"],kun:[""],m:"Var olmak",jlpt:"N2",ex:[{w:"存在",r:"そんざい",m:"Varlık"},{w:"存続",r:"そんぞく",m:"Sürdürme"},{w:"保存",r:"ほぞん",m:"Koruma"}]},
+  {n:242,k:"供",on:["キョウ","ク"],kun:["そな","とも"],m:"Sağlamak",jlpt:"N2",ex:[{w:"供給",r:"きょうきゅう",m:"Arz"},{w:"奉供",r:"ほうきょう",m:"Sunma"},{w:"需要と供給",r:"じゅようときょうきゅう",m:"Arz ve talep"}]},
+  {n:243,k:"局",on:["キョク"],kun:[""],m:"Büro / Durum",jlpt:"N2",ex:[{w:"結局",r:"けっきょく",m:"Sonunda"},{w:"局面",r:"きょくめん",m:"Durum"},{w:"放送局",r:"ほうそうきょく",m:"Yayın istasyonu"}]},
+  {n:244,k:"独",on:["ドク"],kun:["ひと"],m:"Yalnız / Almanya",jlpt:"N2",ex:[{w:"独立",r:"どくりつ",m:"Bağımsız"},{w:"独自",r:"どくじ",m:"Özgün"},{w:"孤独",r:"こどく",m:"Yalnızlık"}]},
+  {n:245,k:"演",on:["エン"],kun:[""],m:"Oynamak / Sergilemek",jlpt:"N2",ex:[{w:"演説",r:"えんぜつ",m:"Konuşma"},{w:"演技",r:"えんぎ",m:"Oyunculuk"},{w:"公演",r:"こうえん",m:"Gösteri"}]},
+  {n:246,k:"優",on:["ユウ"],kun:["すぐ","やさ"],m:"Üstün / Nazik",jlpt:"N2",ex:[{w:"優しい",r:"やさしい",m:"Nazik"},{w:"優先",r:"ゆうせん",m:"Öncelik"},{w:"優勝",r:"ゆうしょう",m:"Şampiyonluk"}]},
+  {n:247,k:"検",on:["ケン"],kun:[""],m:"İncelemek / Kontrol",jlpt:"N2",ex:[{w:"検査",r:"けんさ",m:"İnceleme"},{w:"検討",r:"けんとう",m:"Değerlendirme"},{w:"検索",r:"けんさく",m:"Arama"}]},
+  {n:248,k:"歴",on:["レキ"],kun:[""],m:"Tarih / Geçmiş",jlpt:"N2",ex:[{w:"歴史",r:"れきし",m:"Tarih"},{w:"履歴",r:"りれき",m:"Özgeçmiş"},{w:"歴代",r:"れきだい",m:"Tarih boyunca"}]},
+  {n:249,k:"採",on:["サイ"],kun:["と"],m:"Almak / Seçmek",jlpt:"N2",ex:[{w:"採用",r:"さいよう",m:"İşe alma"},{w:"採取",r:"さいしゅ",m:"Toplama"},{w:"採掘",r:"さいくつ",m:"Madencilik"}]},
+  {n:250,k:"様",on:["ヨウ"],kun:["さま"],m:"Biçim / Saygı ifadesi",jlpt:"N2",ex:[{w:"様子",r:"ようす",m:"Durum"},{w:"同様",r:"どうよう",m:"Aynı şekilde"},{w:"お客様",r:"おきゃくさま",m:"Değerli müşteri"}]},
+  {n:251,k:"争",on:["ソウ"],kun:["あらそ"],m:"Çatışmak",jlpt:"N2",ex:[{w:"紛争",r:"ふんそう",m:"Çatışma"},{w:"争点",r:"そうてん",m:"Tartışmalı nokta"},{w:"論争",r:"ろんそう",m:"Tartışma"}]},
+  {n:252,k:"被",on:["ヒ"],kun:["こうむ","かぶ"],m:"Pasif ifade / Giyinmek",jlpt:"N2",ex:[{w:"被害",r:"ひがい",m:"Zarar"},{w:"被告",r:"ひこく",m:"Sanık"},{w:"被る",r:"こうむる",m:"Maruz kalmak"}]},
+  {n:253,k:"略",on:["リャク"],kun:[""],m:"Kısaltmak / Plan",jlpt:"N2",ex:[{w:"戦略",r:"せんりゃく",m:"Strateji"},{w:"略語",r:"りゃくご",m:"Kısaltma"},{w:"省略",r:"しょうりゃく",m:"Atlama"}]},
+  {n:254,k:"招",on:["ショウ"],kun:["まね"],m:"Davet etmek",jlpt:"N2",ex:[{w:"招待",r:"しょうたい",m:"Davet"},{w:"招く",r:"まねく",m:"Davet etmek"},{w:"招集",r:"しょうしゅう",m:"Toplantıya çağırma"}]},
+  {n:255,k:"段",on:["ダン"],kun:[""],m:"Adım / Seviye",jlpt:"N2",ex:[{w:"手段",r:"しゅだん",m:"Araç"},{w:"値段",r:"ねだん",m:"Fiyat"},{w:"段落",r:"だんらく",m:"Paragraf"}]},
+  {n:256,k:"均",on:["キン"],kun:[""],m:"Eşit / Ortalama",jlpt:"N2",ex:[{w:"平均",r:"へいきん",m:"Ortalama"},{w:"均等",r:"きんとう",m:"Eşit"},{w:"均衡",r:"きんこう",m:"Denge"}]},
+  {n:257,k:"節",on:["セツ","セチ"],kun:["ふし"],m:"Eklem / Mevsim / Kısım",jlpt:"N2",ex:[{w:"季節",r:"きせつ",m:"Mevsim"},{w:"節約",r:"せつやく",m:"Tasarruf"},{w:"調節",r:"ちょうせつ",m:"Ayarlama"}]},
+  {n:258,k:"賛",on:["サン"],kun:[""],m:"Övmek / Desteklemek",jlpt:"N2",ex:[{w:"賛成",r:"さんせい",m:"Onay"},{w:"賞賛",r:"しょうさん",m:"Takdir"},{w:"協賛",r:"きょうさん",m:"Sponsorluk"}]},
+  {n:259,k:"賞",on:["ショウ"],kun:[""],m:"Ödül",jlpt:"N2",ex:[{w:"賞品",r:"しょうひん",m:"Ödül"},{w:"受賞",r:"じゅしょう",m:"Ödül alma"},{w:"大賞",r:"たいしょう",m:"Büyük ödül"}]},
+  {n:260,k:"委",on:["イ"],kun:["ゆだ"],m:"Komisyon / Devretmek",jlpt:"N2",ex:[{w:"委員会",r:"いいんかい",m:"Komite"},{w:"委任",r:"いにん",m:"Yetki devri"},{w:"委員",r:"いいん",m:"Komite üyesi"}]},
+  {n:261,k:"負",on:["フ"],kun:["ま","おう"],m:"Yenilmek / Yüklenmek",jlpt:"N2",ex:[{w:"負ける",r:"まける",m:"Kaybetmek"},{w:"負担",r:"ふたん",m:"Yük"},{w:"勝負",r:"しょうぶ",m:"Maç"}]},
+  {n:262,k:"補",on:["ホ"],kun:["おぎな"],m:"Tamamlamak / Destek",jlpt:"N2",ex:[{w:"補足",r:"ほそく",m:"Tamamlama"},{w:"候補",r:"こうほ",m:"Aday"},{w:"補助",r:"ほじょ",m:"Yardım"}]},
+  {n:263,k:"訓",on:["クン"],kun:["おし"],m:"Eğitmek / Kun okuyuşu",jlpt:"N2",ex:[{w:"訓練",r:"くんれん",m:"Eğitim"},{w:"教訓",r:"きょうくん",m:"Ders"},{w:"訓読み",r:"くんよみ",m:"Kun okuyuşu"}]},
+  {n:264,k:"術",on:["ジュツ"],kun:["すべ"],m:"Sanat / Teknik",jlpt:"N2",ex:[{w:"技術",r:"ぎじゅつ",m:"Teknoloji"},{w:"芸術",r:"げいじゅつ",m:"Sanat"},{w:"美術",r:"びじゅつ",m:"Güzel sanatlar"}]},
+  {n:265,k:"造",on:["ゾウ"],kun:["つく"],m:"Yaratmak / İnşa etmek",jlpt:"N2",ex:[{w:"製造",r:"せいぞう",m:"Üretim"},{w:"改造",r:"かいぞう",m:"Yenileme"},{w:"建造",r:"けんぞう",m:"İnşaat"}]},
+  {n:266,k:"形",on:["ケイ","ギョウ"],kun:["かた","かたち"],m:"Biçim / Şekil",jlpt:"N2",ex:[{w:"形式",r:"けいしき",m:"Form"},{w:"形成",r:"けいせい",m:"Oluşum"},{w:"三角形",r:"さんかっけい",m:"Üçgen"}]},
+  {n:267,k:"応",on:["オウ"],kun:["こた"],m:"Yanıt vermek / Uyum",jlpt:"N2",ex:[{w:"反応",r:"はんのう",m:"Tepki"},{w:"応じる",r:"おうじる",m:"Yanıt vermek"},{w:"対応",r:"たいおう",m:"Müdahale"}]},
+  {n:268,k:"移",on:["イ"],kun:["うつ"],m:"Hareket etmek / Geçmek",jlpt:"N2",ex:[{w:"移動",r:"いどう",m:"Hareket"},{w:"移住",r:"いじゅう",m:"Göç"},{w:"推移",r:"すいい",m:"Geçiş"}]},
+  {n:269,k:"派",on:["ハ"],kun:[""],m:"Hizip / Göndermek",jlpt:"N2",ex:[{w:"立派",r:"りっぱ",m:"Etkileyici"},{w:"派遣",r:"はけん",m:"Görevlendirme"},{w:"党派",r:"とうは",m:"Parti grubu"}]},
+  {n:270,k:"拠",on:["キョ","コ"],kun:["よ"],m:"Dayanak / Merkez",jlpt:"N2",ex:[{w:"根拠",r:"こんきょ",m:"Dayanak"},{w:"拠点",r:"きょてん",m:"Üs"},{w:"証拠",r:"しょうこ",m:"Kanıt"}]},
+  {n:271,k:"典",on:["テン"],kun:[""],m:"Klasik / Tören",jlpt:"N2",ex:[{w:"古典",r:"こてん",m:"Klasik"},{w:"辞典",r:"じてん",m:"Sözlük"},{w:"式典",r:"しきてん",m:"Tören"}]},
+  {n:272,k:"絡",on:["ラク"],kun:["から"],m:"Bağlamak / İletişim",jlpt:"N2",ex:[{w:"連絡",r:"れんらく",m:"İletişim"},{w:"絡む",r:"からむ",m:"Bağlanmak"},{w:"複絡",r:"ふくらく",m:"Komplikasyon"}]},
+  {n:273,k:"測",on:["ソク"],kun:["はか"],m:"Ölçmek / Tahmin",jlpt:"N2",ex:[{w:"測定",r:"そくてい",m:"Ölçüm"},{w:"計測",r:"けいそく",m:"Ölçüm"},{w:"推測",r:"すいそく",m:"Tahmin"}]},
+  {n:274,k:"証",on:["ショウ"],kun:["あか"],m:"Kanıtlamak / Belge",jlpt:"N2",ex:[{w:"証明",r:"しょうめい",m:"Kanıt"},{w:"証拠",r:"しょうこ",m:"Delil"},{w:"保証",r:"ほしょう",m:"Garanti"}]},
+  {n:275,k:"識",on:["シキ"],kun:[""],m:"Bilmek / Tanımak",jlpt:"N2",ex:[{w:"知識",r:"ちしき",m:"Bilgi"},{w:"意識",r:"いしき",m:"Bilinç"},{w:"認識",r:"にんしき",m:"Tanıma"}]},
+  {n:276,k:"能",on:["ノウ"],kun:[""],m:"Yetenek / Beceri",jlpt:"N2",ex:[{w:"能力",r:"のうりょく",m:"Yetenek"},{w:"可能",r:"かのう",m:"Mümkün"},{w:"才能",r:"さいのう",m:"Yetenek"}]},
+  {n:277,k:"旧",on:["キュウ"],kun:["ふる"],m:"Eski",jlpt:"N2",ex:[{w:"旧式",r:"きゅうしき",m:"Eski usul"},{w:"旧友",r:"きゅうゆう",m:"Eski dost"},{w:"復旧",r:"ふっきゅう",m:"Restorasyon"}]},
+  {n:278,k:"施",on:["シ","セ"],kun:["ほどこ"],m:"Uygulamak / Tesis",jlpt:"N2",ex:[{w:"施設",r:"しせつ",m:"Tesis"},{w:"実施",r:"じっし",m:"Uygulama"},{w:"施工",r:"せこう",m:"İnşaat"}]},
+  {n:279,k:"防",on:["ボウ"],kun:["ふせ"],m:"Korumak / Önlemek",jlpt:"N2",ex:[{w:"防止",r:"ぼうし",m:"Önleme"},{w:"予防",r:"よぼう",m:"Korunma"},{w:"国防",r:"こくぼう",m:"Ulusal savunma"}]},
+  {n:280,k:"域",on:["イキ"],kun:[""],m:"Alan / Bölge",jlpt:"N2",ex:[{w:"地域",r:"ちいき",m:"Bölge"},{w:"領域",r:"りょういき",m:"Alan"},{w:"区域",r:"くいき",m:"Bölge"}]},
+  {n:281,k:"側",on:["ソク"],kun:["がわ"],m:"Taraf / Yan",jlpt:"N2",ex:[{w:"右側",r:"みぎがわ",m:"Sağ taraf"},{w:"左側",r:"ひだりがわ",m:"Sol taraf"},{w:"両側",r:"りょうがわ",m:"Her iki taraf"}]},
+  {n:282,k:"想",on:["ソウ","ソ"],kun:[""],m:"Hayal etmek / Düşünce",jlpt:"N2",ex:[{w:"思想",r:"しそう",m:"Düşünce"},{w:"想像",r:"そうぞう",m:"Hayal gücü"},{w:"理想",r:"りそう",m:"İdeal"}]},
+  {n:283,k:"適",on:["テキ"],kun:[""],m:"Uygun",jlpt:"N2",ex:[{w:"適切",r:"てきせつ",m:"Uygun"},{w:"適用",r:"てきよう",m:"Uygulama"},{w:"最適",r:"さいてき",m:"En uygun"}]},
+  {n:284,k:"末",on:["マツ","バツ"],kun:["すえ"],m:"Son / Uç",jlpt:"N2",ex:[{w:"週末",r:"しゅうまつ",m:"Hafta sonu"},{w:"末端",r:"まったん",m:"Uç"},{w:"結末",r:"けつまつ",m:"Son"}]},
+  {n:285,k:"義",on:["ギ"],kun:[""],m:"İlke / Görev",jlpt:"N2",ex:[{w:"意義",r:"いぎ",m:"Anlam/Önem"},{w:"義務",r:"ぎむ",m:"Yükümlülük"},{w:"定義",r:"ていぎ",m:"Tanım"}]},
+  {n:286,k:"務",on:["ム"],kun:["つと"],m:"Görev / Çalışmak",jlpt:"N2",ex:[{w:"任務",r:"にんむ",m:"Görev"},{w:"業務",r:"ぎょうむ",m:"İş"},{w:"財務",r:"ざいむ",m:"Finans"}]},
+  {n:287,k:"賃",on:["チン"],kun:[""],m:"Kira / Ücret",jlpt:"N2",ex:[{w:"賃金",r:"ちんぎん",m:"Ücret"},{w:"家賃",r:"やちん",m:"Kira"},{w:"運賃",r:"うんちん",m:"Ulaşım ücreti"}]},
+  {n:288,k:"際",on:["サイ"],kun:["きわ"],m:"Kenar / Zaman",jlpt:"N2",ex:[{w:"実際に",r:"じっさいに",m:"Gerçekte"},{w:"際立つ",r:"きわだつ",m:"Öne çıkmak"},{w:"この際",r:"このさい",m:"Bu fırsatta"}]},
+  {n:289,k:"素",on:["ソ","ス"],kun:["もと"],m:"Unsur / Doğal",jlpt:"N2",ex:[{w:"素材",r:"そざい",m:"Malzeme"},{w:"素晴らしい",r:"すばらしい",m:"Harika"},{w:"要素",r:"ようそ",m:"Unsur"}]},
+  {n:290,k:"景",on:["ケイ"],kun:[""],m:"Manzara / Sahne",jlpt:"N2",ex:[{w:"景色",r:"けしき",m:"Manzara"},{w:"背景",r:"はいけい",m:"Arka plan"},{w:"風景",r:"ふうけい",m:"Peyzaj"}]},
+  {n:291,k:"厳",on:["ゲン","ゴン"],kun:["おごそ","きび"],m:"Katı / Sert",jlpt:"N2",ex:[{w:"厳しい",r:"きびしい",m:"Sert"},{w:"厳格",r:"げんかく",m:"Katı"},{w:"厳密",r:"げんみつ",m:"Kesin"}]},
+  {n:292,k:"貿",on:["ボウ"],kun:[""],m:"Ticaret",jlpt:"N2",ex:[{w:"貿易",r:"ぼうえき",m:"Ticaret"},{w:"自由貿易",r:"じゆうぼうえき",m:"Serbest ticaret"},{w:"貿易赤字",r:"ぼうえきあかじ",m:"Ticaret açığı"}]},
+  {n:293,k:"易",on:["エキ","イ"],kun:["やさ"],m:"Kolay / Değiş tokuş",jlpt:"N2",ex:[{w:"容易",r:"ようい",m:"Kolay"},{w:"貿易",r:"ぼうえき",m:"Ticaret"},{w:"易しい",r:"やさしい",m:"Kolay"}]},
+  {n:294,k:"販",on:["ハン"],kun:[""],m:"Satmak",jlpt:"N2",ex:[{w:"販売",r:"はんばい",m:"Satış"},{w:"市販",r:"しはん",m:"Ticari satış"},{w:"販路",r:"はんろ",m:"Satış kanalı"}]},
+  {n:295,k:"宗",on:["シュウ","ソウ"],kun:["むね"],m:"Din / Mezhep",jlpt:"N2",ex:[{w:"宗教",r:"しゅうきょう",m:"Din"},{w:"宗派",r:"しゅうは",m:"Mezhep"},{w:"宗主国",r:"そうしゅこく",m:"Sömürgeci devlet"}]},
+  {n:296,k:"慣",on:["カン"],kun:["な"],m:"Alışmak",jlpt:"N2",ex:[{w:"習慣",r:"しゅうかん",m:"Alışkanlık"},{w:"慣れる",r:"なれる",m:"Alışmak"},{w:"慣用",r:"かんよう",m:"Geleneksel kullanım"}]},
+  {n:297,k:"縮",on:["シュク"],kun:["ちぢ"],m:"Büzülmek / Kısaltmak",jlpt:"N2",ex:[{w:"縮む",r:"ちぢむ",m:"Büzülmek"},{w:"圧縮",r:"あっしゅく",m:"Sıkıştırma"},{w:"短縮",r:"たんしゅく",m:"Kısaltma"}]},
+  {n:298,k:"奥",on:["オウ"],kun:["おく"],m:"Derinlik / İç",jlpt:"N2",ex:[{w:"奥さん",r:"おくさん",m:"Hanım (evli kadın)"},{w:"奥深い",r:"おくぶかい",m:"Derin"},{w:"奥地",r:"おくち",m:"İç bölgeler"}]},
+  {n:299,k:"燃",on:["ネン"],kun:["も"],m:"Yanmak",jlpt:"N2",ex:[{w:"燃える",r:"もえる",m:"Yanmak"},{w:"燃料",r:"ねんりょう",m:"Yakıt"},{w:"可燃",r:"かねん",m:"Yanıcı"}]},
+  {n:300,k:"革",on:["カク"],kun:["かわ"],m:"Reform / Deri",jlpt:"N2",ex:[{w:"革命",r:"かくめい",m:"Devrim"},{w:"改革",r:"かいかく",m:"Reform"},{w:"皮革",r:"ひかく",m:"Deri"}]},
+
+  // 301-400
+  {n:301,k:"批",on:["ヒ"],kun:[""],m:"Eleştirmek",jlpt:"N1",ex:[{w:"批判",r:"ひはん",m:"Eleştiri"},{w:"批評",r:"ひひょう",m:"Yorum"},{w:"批准",r:"ひじゅん",m:"Onay"}]},
+  {n:302,k:"刺",on:["シ"],kun:["さ","とげ"],m:"Delmek / İğne",jlpt:"N1",ex:[{w:"刺激",r:"しげき",m:"Uyarıcı"},{w:"刺す",r:"さす",m:"Delmek"},{w:"刺身",r:"さしみ",m:"Sashimi"}]},
+  {n:303,k:"矛",on:["ム"],kun:["ほこ"],m:"Mızrak",jlpt:"N1",ex:[{w:"矛盾",r:"むじゅん",m:"Çelişki"},{w:"矛先",r:"ほこさき",m:"Saldırının hedefi"},{w:"",r:"",m:""}]},
+  {n:304,k:"盾",on:["ジュン"],kun:["たて"],m:"Kalkan",jlpt:"N1",ex:[{w:"矛盾",r:"むじゅん",m:"Çelişki"},{w:"盾突く",r:"たてつく",m:"Karşı çıkmak"},{w:"",r:"",m:""}]},
+  {n:305,k:"企",on:["キ"],kun:["くわだ"],m:"Planlamak / Girişim",jlpt:"N1",ex:[{w:"企業",r:"きぎょう",m:"Şirket/Girişim"},{w:"企画",r:"きかく",m:"Plan"},{w:"企てる",r:"くわだてる",m:"Planlamak"}]},
+  {n:306,k:"摘",on:["テキ"],kun:["つ"],m:"Toplamak / Belirtmek",jlpt:"N1",ex:[{w:"指摘",r:"してき",m:"İşaret etme"},{w:"摘む",r:"つむ",m:"Toplamak"},{w:"摘発",r:"てきはつ",m:"İfşa etme"}]},
+  {n:307,k:"廃",on:["ハイ"],kun:["すた"],m:"İptal etmek / Harap",jlpt:"N1",ex:[{w:"廃止",r:"はいし",m:"Kaldırma"},{w:"廃棄",r:"はいき",m:"Atma"},{w:"荒廃",r:"こうはい",m:"Harap"}]},
+  {n:308,k:"棄",on:["キ"],kun:["す"],m:"Terk etmek",jlpt:"N1",ex:[{w:"廃棄",r:"はいき",m:"İmha"},{w:"放棄",r:"ほうき",m:"Terk etme"},{w:"棄権",r:"きけん",m:"Çekilme"}]},
+  {n:309,k:"縦",on:["ジュウ"],kun:["たて"],m:"Dikey",jlpt:"N1",ex:[{w:"縦断",r:"じゅうだん",m:"Dikey kesme"},{w:"縦横",r:"じゅうおう",m:"Dikey ve yatay"},{w:"操縦",r:"そうじゅう",m:"Pilotaj"}]},
+  {n:310,k:"横",on:["オウ"],kun:["よこ"],m:"Yatay / Yan",jlpt:"N1",ex:[{w:"横断",r:"おうだん",m:"Yatay geçiş"},{w:"横柄",r:"おうへい",m:"Kibirli"},{w:"横浜",r:"よこはま",m:"Yokohama"}]},
+  {n:311,k:"刻",on:["コク"],kun:["きざ"],m:"Kazımak / Anlık",jlpt:"N1",ex:[{w:"時刻",r:"じこく",m:"Saat"},{w:"刻む",r:"きざむ",m:"Kazımak"},{w:"深刻",r:"しんこく",m:"Ciddi"}]},
+  {n:312,k:"赴",on:["フ"],kun:["おもむ"],m:"Gitmek / Yönelmek",jlpt:"N1",ex:[{w:"赴任",r:"ふにん",m:"Göreve gitme"},{w:"赴く",r:"おもむく",m:"Yönelmek"},{w:"",r:"",m:""}]},
+  {n:313,k:"郊",on:["コウ"],kun:[""],m:"Banliyö",jlpt:"N1",ex:[{w:"郊外",r:"こうがい",m:"Banliyö"},{w:"近郊",r:"きんこう",m:"Yakın çevre"},{w:"",r:"",m:""}]},
+  {n:314,k:"奮",on:["フン"],kun:["ふる"],m:"Heyecanlanmak",jlpt:"N1",ex:[{w:"興奮",r:"こうふん",m:"Heyecan"},{w:"奮発",r:"ふんぱつ",m:"Güçlü çaba"},{w:"奮起",r:"ふんき",m:"Heyecanla harekete geçme"}]},
+  {n:315,k:"励",on:["レイ"],kun:["はげ"],m:"Teşvik etmek",jlpt:"N1",ex:[{w:"励む",r:"はげむ",m:"Çabalamak"},{w:"励ます",r:"はげます",m:"Teşvik etmek"},{w:"奨励",r:"しょうれい",m:"Teşvik"}]},
+  {n:316,k:"促",on:["ソク"],kun:["うなが"],m:"Teşvik etmek / Hızlandırmak",jlpt:"N1",ex:[{w:"促す",r:"うながす",m:"Teşvik etmek"},{w:"促進",r:"そくしん",m:"Teşvik"},{w:"催促",r:"さいそく",m:"Baskı yapma"}]},
+  {n:317,k:"督",on:["トク"],kun:[""],m:"Denetlemek / Yönetmek",jlpt:"N1",ex:[{w:"監督",r:"かんとく",m:"Yönetmen/Koç"},{w:"督促",r:"とくそく",m:"Baskı"},{w:"",r:"",m:""}]},
+  {n:318,k:"監",on:["カン"],kun:[""],m:"İzlemek / Denetlemek",jlpt:"N1",ex:[{w:"監督",r:"かんとく",m:"Yönetmen"},{w:"監視",r:"かんし",m:"İzleme"},{w:"監査",r:"かんさ",m:"Denetim"}]},
+  {n:319,k:"臨",on:["リン"],kun:["のぞ"],m:"Bakmak / Hazır olmak",jlpt:"N1",ex:[{w:"臨時",r:"りんじ",m:"Geçici"},{w:"臨む",r:"のぞむ",m:"Katılmak"},{w:"臨床",r:"りんしょう",m:"Klinik"}]},
+  {n:320,k:"却",on:["キャク"],kun:["かえ"],m:"Geri çevirmek / Oysaki",jlpt:"N1",ex:[{w:"却下",r:"きゃっか",m:"Ret"},{w:"売却",r:"ばいきゃく",m:"Satış"},{w:"返却",r:"へんきゃく",m:"İade"}]},
+  {n:321,k:"徐",on:["ジョ"],kun:["おもむろ"],m:"Yavaş yavaş",jlpt:"N1",ex:[{w:"徐々に",r:"じょじょに",m:"Yavaş yavaş"},{w:"徐行",r:"じょこう",m:"Yavaş ilerleme"},{w:"",r:"",m:""}]},
+  {n:322,k:"充",on:["ジュウ"],kun:["あ"],m:"Doldurmak / Yeterli",jlpt:"N1",ex:[{w:"充実",r:"じゅうじつ",m:"Tatmin"},{w:"充電",r:"じゅうでん",m:"Şarj"},{w:"充分",r:"じゅうぶん",m:"Yeterli"}]},
+  {n:323,k:"粛",on:["シュク"],kun:[""],m:"Ciddi / Sessiz",jlpt:"N1",ex:[{w:"厳粛",r:"げんしゅく",m:"Ciddi"},{w:"粛清",r:"しゅくせい",m:"Tasfiye"},{w:"粛々",r:"しゅくしゅく",m:"Sessizce"}]},
+  {n:324,k:"穏",on:["オン"],kun:["おだ"],m:"Sakin / Huzurlu",jlpt:"N1",ex:[{w:"穏やか",r:"おだやか",m:"Sakin"},{w:"穏健",r:"おんけん",m:"Ilımlı"},{w:"平穏",r:"へいおん",m:"Barışçıl"}]},
+  {n:325,k:"緩",on:["カン"],kun:["ゆる"],m:"Gevşemek",jlpt:"N1",ex:[{w:"緩やか",r:"ゆるやか",m:"Yavaş/Yumuşak"},{w:"緩和",r:"かんわ",m:"Hafifletme"},{w:"緩む",r:"ゆるむ",m:"Gevşemek"}]},
+  {n:326,k:"縛",on:["バク"],kun:["しば"],m:"Bağlamak",jlpt:"N1",ex:[{w:"縛る",r:"しばる",m:"Bağlamak"},{w:"束縛",r:"そくばく",m:"Kısıtlama"},{w:"自縄自縛",r:"じじょうじばく",m:"Kendi tuzağına düşmek"}]},
+  {n:327,k:"脱",on:["ダツ"],kun:["ぬ"],m:"Çıkmak / Soyunmak",jlpt:"N1",ex:[{w:"脱出",r:"だっしゅつ",m:"Kaçış"},{w:"脱退",r:"だったい",m:"Çekilme"},{w:"離脱",r:"りだつ",m:"Ayrılma"}]},
+  {n:328,k:"漏",on:["ロウ"],kun:["も"],m:"Sızdırmak",jlpt:"N1",ex:[{w:"漏れる",r:"もれる",m:"Sızmak"},{w:"漏洩",r:"ろうえい",m:"Bilgi sızıntısı"},{w:"雨漏り",r:"あまもり",m:"Çatı sızıntısı"}]},
+  {n:329,k:"塞",on:["ソク","サイ"],kun:["ふさ","とりで"],m:"Tıkamak / Kale",jlpt:"N1",ex:[{w:"要塞",r:"ようさい",m:"Kale"},{w:"塞ぐ",r:"ふさぐ",m:"Tıkamak"},{w:"閉塞",r:"へいそく",m:"Tıkanıklık"}]},
+  {n:330,k:"繁",on:["ハン"],kun:["しげ"],m:"Yoğun / Müreffeh",jlpt:"N1",ex:[{w:"繁栄",r:"はんえい",m:"Refah"},{w:"繁盛",r:"はんじょう",m:"Bolluk"},{w:"繁殖",r:"はんしょく",m:"Üreme"}]},
+  {n:331,k:"荷",on:["カ"],kun:["に"],m:"Yük / Eşya",jlpt:"N1",ex:[{w:"荷物",r:"にもつ",m:"Bagaj"},{w:"入荷",r:"にゅうか",m:"Stok"},{w:"荷造り",r:"にづくり",m:"Paketleme"}]},
+  {n:332,k:"墓",on:["ボ"],kun:["はか"],m:"Mezar",jlpt:"N1",ex:[{w:"墓地",r:"ぼち",m:"Mezarlık"},{w:"お墓",r:"おはか",m:"Mezar"},{w:"墓碑",r:"ぼひ",m:"Mezar taşı"}]},
+  {n:333,k:"貧",on:["ヒン","ビン"],kun:["まず"],m:"Yoksul",jlpt:"N1",ex:[{w:"貧乏",r:"びんぼう",m:"Fakirlik"},{w:"貧困",r:"ひんこん",m:"Yoksulluk"},{w:"貧しい",r:"まずしい",m:"Yoksul"}]},
+  {n:334,k:"富",on:["フ","フウ"],kun:["と","とみ"],m:"Zengin / Servet",jlpt:"N1",ex:[{w:"富む",r:"とむ",m:"Zengin olmak"},{w:"豊富",r:"ほうふ",m:"Bol"},{w:"富裕",r:"ふゆう",m:"Varlıklı"}]},
+  {n:335,k:"模",on:["モ","ボ"],kun:[""],m:"Model / Örnek",jlpt:"N1",ex:[{w:"規模",r:"きぼ",m:"Ölçek"},{w:"模倣",r:"もほう",m:"Taklit"},{w:"模型",r:"もけい",m:"Model"}]},
+  {n:336,k:"倣",on:["ホウ"],kun:["なら"],m:"Taklit etmek",jlpt:"N1",ex:[{w:"模倣",r:"もほう",m:"Taklit"},{w:"倣う",r:"ならう",m:"Uymak"},{w:"",r:"",m:""}]},
+  {n:337,k:"猛",on:["モウ"],kun:["たけ"],m:"Vahşi / Sert",jlpt:"N1",ex:[{w:"猛烈",r:"もうれつ",m:"Şiddetli"},{w:"猛獣",r:"もうじゅう",m:"Vahşi hayvan"},{w:"勇猛",r:"ゆうもう",m:"Cesur"}]},
+  {n:338,k:"烈",on:["レツ"],kun:[""],m:"Şiddetli",jlpt:"N1",ex:[{w:"激烈",r:"げきれつ",m:"Şiddetli"},{w:"猛烈",r:"もうれつ",m:"Çok şiddetli"},{w:"熱烈",r:"ねつれつ",m:"Tutkulu"}]},
+  {n:339,k:"鮮",on:["セン"],kun:["あざ"],m:"Taze / Canlı",jlpt:"N1",ex:[{w:"新鮮",r:"しんせん",m:"Taze"},{w:"鮮やか",r:"あざやか",m:"Canlı"},{w:"朝鮮",r:"ちょうせん",m:"Kore"}]},
+  {n:340,k:"奪",on:["ダツ"],kun:["うば"],m:"Almak / Gasp",jlpt:"N1",ex:[{w:"奪う",r:"うばう",m:"Almak (zorla)"},{w:"剥奪",r:"はくだつ",m:"Mahrum bırakma"},{w:"争奪",r:"そうだつ",m:"Çatışma"}]},
+  {n:341,k:"壊",on:["カイ"],kun:["こわ"],m:"Yıkmak / Bozmak",jlpt:"N1",ex:[{w:"壊れる",r:"こわれる",m:"Bozulmak"},{w:"崩壊",r:"ほうかい",m:"Çöküş"},{w:"破壊",r:"はかい",m:"Yıkım"}]},
+  {n:342,k:"僅",on:["キン"],kun:["わず"],m:"Az / Biraz",jlpt:"N1",ex:[{w:"僅か",r:"わずか",m:"Biraz"},{w:"僅少",r:"きんしょう",m:"Çok az"},{w:"",r:"",m:""}]},
+  {n:343,k:"喪",on:["ソウ"],kun:["も"],m:"Yas / Kaybetmek",jlpt:"N1",ex:[{w:"喪失",r:"そうしつ",m:"Kayıp"},{w:"喪中",r:"もちゅう",m:"Yas döneminde"},{w:"喪服",r:"もふく",m:"Yas kıyafeti"}]},
+  {n:344,k:"滞",on:["タイ"],kun:["とどこお"],m:"Durmak / Gecikmek",jlpt:"N1",ex:[{w:"停滞",r:"ていたい",m:"Durgunluk"},{w:"滞在",r:"たいざい",m:"Konaklama"},{w:"滞納",r:"たいのう",m:"Gecikmiş ödeme"}]},
+  {n:345,k:"遅",on:["チ"],kun:["おそ","おく"],m:"Geç / Yavaş",jlpt:"N1",ex:[{w:"遅い",r:"おそい",m:"Yavaş/Geç"},{w:"遅刻",r:"ちこく",m:"Geç kalma"},{w:"遅延",r:"ちえん",m:"Gecikme"}]},
+  {n:346,k:"渋",on:["ジュウ"],kun:["しぶ"],m:"Astringent / Trafik sıkışıklığı",jlpt:"N1",ex:[{w:"渋滞",r:"じゅうたい",m:"Trafik sıkışıklığı"},{w:"渋谷",r:"しぶや",m:"Shibuya"},{w:"渋い",r:"しぶい",m:"Havalı/Olgun"}]},
+  {n:347,k:"焦",on:["ショウ"],kun:["こ","あせ"],m:"Yanmak / Sabırsız",jlpt:"N1",ex:[{w:"焦る",r:"あせる",m:"Aceleci olmak"},{w:"焦点",r:"しょうてん",m:"Odak noktası"},{w:"焦げる",r:"こげる",m:"Yanmak"}]},
+  {n:348,k:"慌",on:["コウ"],kun:["あわ"],m:"Paniklemek",jlpt:"N1",ex:[{w:"慌てる",r:"あわてる",m:"Paniklemek"},{w:"大慌て",r:"おおあわて",m:"Büyük panik"},{w:"慌ただしい",r:"あわただしい",m:"Hızlı/Aceleyle"}]},
+  {n:349,k:"把",on:["ハ"],kun:[""],m:"Tutmak / Kavramak",jlpt:"N1",ex:[{w:"把握",r:"はあく",m:"Kavramak"},{w:"一把",r:"いちわ",m:"Bir demet"},{w:"",r:"",m:""}]},
+  {n:350,k:"握",on:["アク"],kun:["にぎ"],m:"Kavramak",jlpt:"N1",ex:[{w:"握手",r:"あくしゅ",m:"El sıkışma"},{w:"握る",r:"にぎる",m:"Kavramak"},{w:"把握",r:"はあく",m:"Anlama"}]},
+  {n:351,k:"践",on:["セン"],kun:["ふ"],m:"Basmak / Uygulamak",jlpt:"N1",ex:[{w:"実践",r:"じっせん",m:"Pratik uygulama"},{w:"践む",r:"ふむ",m:"Basmak"},{w:"",r:"",m:""}]},
+  {n:352,k:"鑑",on:["カン"],kun:["かがみ"],m:"Yansıma / Değerlendirmek",jlpt:"N1",ex:[{w:"鑑賞",r:"かんしょう",m:"Takdir etme"},{w:"鑑定",r:"かんてい",m:"Değerlendirme"},{w:"図鑑",r:"ずかん",m:"Resimli kitap"}]},
+  {n:353,k:"賄",on:["ワイ"],kun:["まかな"],m:"Rüşvet / Beslemek",jlpt:"N1",ex:[{w:"賄賂",r:"わいろ",m:"Rüşvet"},{w:"賄う",r:"まかなう",m:"Karşılamak"},{w:"",r:"",m:""}]},
+  {n:354,k:"傍",on:["ボウ"],kun:["かたわ","はた"],m:"Yan / Kenar",jlpt:"N1",ex:[{w:"傍ら",r:"かたわら",m:"Yanında"},{w:"傍観",r:"ぼうかん",m:"Seyretme"},{w:"傍線",r:"ぼうせん",m:"Kenar çizgisi"}]},
+  {n:355,k:"朗",on:["ロウ"],kun:["ほが"],m:"Neşeli / Açık",jlpt:"N1",ex:[{w:"朗らか",r:"ほがらか",m:"Neşeli"},{w:"朗読",r:"ろうどく",m:"Yüksek sesle okuma"},{w:"明朗",r:"めいろう",m:"Aydın"}]},
+  {n:356,k:"朽",on:["キュウ"],kun:["く"],m:"Çürümek",jlpt:"N1",ex:[{w:"朽ちる",r:"くちる",m:"Çürümek"},{w:"老朽",r:"ろうきゅう",m:"Eskimiş"},{w:"不朽",r:"ふきゅう",m:"Ölümsüz"}]},
+  {n:357,k:"尚",on:["ショウ"],kun:["なお"],m:"Hâlâ / Üstelik",jlpt:"N1",ex:[{w:"高尚",r:"こうしょう",m:"Yüce/Yüksek"},{w:"尚更",r:"なおさら",m:"Daha da"},{w:"尚早",r:"しょうそう",m:"Erken"}]},
+  {n:358,k:"且",on:["ショ","ソ"],kun:["か","かつ"],m:"Üstelik / Ve",jlpt:"N1",ex:[{w:"且つ",r:"かつ",m:"Hem de"},{w:"",r:"",m:""},{w:"",r:"",m:""}]},
+  {n:359,k:"某",on:["ボウ"],kun:["それがし","なにがし"],m:"Belirli / Bir",jlpt:"N1",ex:[{w:"某氏",r:"ぼうし",m:"Belli biri"},{w:"某社",r:"ぼうしゃ",m:"Belli şirket"},{w:"",r:"",m:""}]},
+  {n:360,k:"及",on:["キュウ"],kun:["およ","いた"],m:"Ulaşmak / Etkilemek",jlpt:"N1",ex:[{w:"及ぶ",r:"およぶ",m:"Ulaşmak"},{w:"言及",r:"げんきゅう",m:"Bahsetmek"},{w:"普及",r:"ふきゅう",m:"Yayma"}]},
+  {n:361,k:"既",on:["キ"],kun:["すで"],m:"Zaten / Artık",jlpt:"N1",ex:[{w:"既に",r:"すでに",m:"Zaten"},{w:"既存",r:"きそん",m:"Mevcut"},{w:"既婚",r:"きこん",m:"Evli"}]},
+  {n:362,k:"延",on:["エン"],kun:["の"],m:"Uzatmak / Ertelemek",jlpt:"N1",ex:[{w:"延長",r:"えんちょう",m:"Uzatma"},{w:"延期",r:"えんき",m:"Erteleme"},{w:"遅延",r:"ちえん",m:"Gecikme"}]},
+  {n:363,k:"繰",on:[""],kun:["く"],m:"Tekrar etmek",jlpt:"N1",ex:[{w:"繰り返す",r:"くりかえす",m:"Tekrar etmek"},{w:"繰り上げ",r:"くりあげ",m:"Erken tarih"},{w:"操る",r:"あやつる",m:"Manipüle etmek"}]},
+  {n:364,k:"掘",on:["クツ"],kun:["ほ"],m:"Kazmak",jlpt:"N1",ex:[{w:"掘る",r:"ほる",m:"Kazmak"},{w:"発掘",r:"はっくつ",m:"Kazı"},{w:"採掘",r:"さいくつ",m:"Madencilik"}]},
+  {n:365,k:"埋",on:["マイ"],kun:["う","うず"],m:"Gömülmek / Doldurmak",jlpt:"N1",ex:[{w:"埋める",r:"うめる",m:"Doldurmak"},{w:"埋葬",r:"まいそう",m:"Defin"},{w:"埋蔵",r:"まいぞう",m:"Gömülü"}]},
+  {n:366,k:"謙",on:["ケン"],kun:[""],m:"Alçakgönüllü",jlpt:"N1",ex:[{w:"謙虚",r:"けんきょ",m:"Alçakgönüllü"},{w:"謙遜",r:"けんそん",m:"Alçakgönüllülük"},{w:"",r:"",m:""}]},
+  {n:367,k:"虚",on:["キョ","コ"],kun:["むな","うつ"],m:"Boş / Sahte",jlpt:"N1",ex:[{w:"虚偽",r:"きょぎ",m:"Yalan"},{w:"謙虚",r:"けんきょ",m:"Alçakgönüllü"},{w:"虚しい",r:"むなしい",m:"Boş/Anlamsız"}]},
+  {n:368,k:"敏",on:["ビン"],kun:[""],m:"Çevik / Hızlı",jlpt:"N1",ex:[{w:"敏感",r:"びんかん",m:"Hassas"},{w:"鋭敏",r:"えいびん",m:"Keskin"},{w:"機敏",r:"きびん",m:"Çevik"}]},
+  {n:369,k:"鋭",on:["エイ"],kun:["するど"],m:"Keskin",jlpt:"N1",ex:[{w:"鋭い",r:"するどい",m:"Keskin"},{w:"鋭利",r:"えいり",m:"Keskin"},{w:"精鋭",r:"せいえい",m:"Elit"}]},
+  {n:370,k:"泡",on:["ホウ"],kun:["あわ"],m:"Köpük / Kabarcık",jlpt:"N1",ex:[{w:"泡",r:"あわ",m:"Köpük"},{w:"泡立て",r:"あわだて",m:"Çırpma"},{w:"水泡",r:"すいほう",m:"Su baloncuğu"}]},
+  {n:371,k:"粒",on:["リュウ"],kun:["つぶ"],m:"Tanecik / Damla",jlpt:"N1",ex:[{w:"粒子",r:"りゅうし",m:"Parçacık"},{w:"米粒",r:"こめつぶ",m:"Pirinç tanesi"},{w:"雨粒",r:"あまつぶ",m:"Yağmur damlası"}]},
+  {n:372,k:"炎",on:["エン"],kun:["ほのお"],m:"Alev / İltihap",jlpt:"N1",ex:[{w:"炎症",r:"えんしょう",m:"İltihap"},{w:"炎",r:"ほのお",m:"Alev"},{w:"肺炎",r:"はいえん",m:"Zatürre"}]},
+  {n:373,k:"霧",on:["ム"],kun:["きり"],m:"Sis",jlpt:"N1",ex:[{w:"霧",r:"きり",m:"Sis"},{w:"霧雨",r:"きりさめ",m:"Çisenti"},{w:"五里霧中",r:"ごりむちゅう",m:"Tamamen kaybolmuş"}]},
+  {n:374,k:"嵐",on:["ラン"],kun:["あらし"],m:"Fırtına",jlpt:"N1",ex:[{w:"嵐",r:"あらし",m:"Fırtına"},{w:"嵐の後",r:"あらしのあと",m:"Fırtınadan sonra"},{w:"",r:"",m:""}]},
+  {n:375,k:"濁",on:["ダク"],kun:["にご"],m:"Bulanık",jlpt:"N1",ex:[{w:"濁る",r:"にごる",m:"Bulanmak"},{w:"清濁",r:"せいだく",m:"Temiz ve kirli"},{w:"濁点",r:"だくてん",m:"Dakuten işareti"}]},
+  {n:376,k:"澄",on:["チョウ"],kun:["す"],m:"Berrak / Durulmak",jlpt:"N1",ex:[{w:"澄む",r:"すむ",m:"Berraklaşmak"},{w:"清澄",r:"せいちょう",m:"Berrak"},{w:"澄んだ",r:"すんだ",m:"Berrak"}]},
+  {n:377,k:"滴",on:["テキ"],kun:["しずく","したた"],m:"Damla",jlpt:"N1",ex:[{w:"水滴",r:"すいてき",m:"Su damlası"},{w:"滴る",r:"したたる",m:"Damlamak"},{w:"一滴",r:"いってき",m:"Bir damla"}]},
+  {n:378,k:"涼",on:["リョウ"],kun:["すず"],m:"Serin",jlpt:"N1",ex:[{w:"涼しい",r:"すずしい",m:"Serin"},{w:"涼む",r:"すずむ",m:"Serinlemek"},{w:"清涼",r:"せいりょう",m:"Ferahlatıcı"}]},
+  {n:379,k:"暖",on:["ダン"],kun:["あたた"],m:"Sıcak (hava)",jlpt:"N1",ex:[{w:"暖かい",r:"あたたかい",m:"Sıcak"},{w:"温暖化",r:"おんだんか",m:"Isınma"},{w:"暖房",r:"だんぼう",m:"Isıtma"}]},
+  {n:380,k:"沸",on:["フツ"],kun:["わ"],m:"Kaynamak",jlpt:"N1",ex:[{w:"沸く",r:"わく",m:"Kaynamak"},{w:"沸かす",r:"わかす",m:"Kaynamaya bırakmak"},{w:"沸騰",r:"ふっとう",m:"Kaynama noktası"}]},
+  {n:381,k:"凍",on:["トウ"],kun:["こお","こご"],m:"Donmak",jlpt:"N1",ex:[{w:"凍る",r:"こおる",m:"Donmak"},{w:"冷凍",r:"れいとう",m:"Dondurma"},{w:"凍結",r:"とうけつ",m:"Dondurma"}]},
+  {n:382,k:"溶",on:["ヨウ"],kun:["と","とけ"],m:"Erimek / Çözülmek",jlpt:"N1",ex:[{w:"溶ける",r:"とける",m:"Erimek"},{w:"溶解",r:"ようかい",m:"Çözünme"},{w:"溶岩",r:"ようがん",m:"Lav"}]},
+  {n:383,k:"渇",on:["カツ"],kun:["かわ"],m:"Susamak",jlpt:"N1",ex:[{w:"渇く",r:"かわく",m:"Susamak"},{w:"渇望",r:"かつぼう",m:"Arzu"},{w:"枯渇",r:"こかつ",m:"Tükenmek"}]},
+  {n:384,k:"潤",on:["ジュン"],kun:["うるお"],m:"Nemlendirmek",jlpt:"N1",ex:[{w:"潤う",r:"うるおう",m:"Nemlenmek"},{w:"利潤",r:"りじゅん",m:"Kâr"},{w:"潤滑",r:"じゅんかつ",m:"Yağlama"}]},
+  {n:385,k:"乾",on:["カン"],kun:["かわ","ほ"],m:"Kurulamak",jlpt:"N1",ex:[{w:"乾く",r:"かわく",m:"Kurumak"},{w:"乾燥",r:"かんそう",m:"Kurutma"},{w:"乾杯",r:"かんぱい",m:"Şerefe!"}]},
+  {n:386,k:"湿",on:["シツ"],kun:["しめ"],m:"Nemli",jlpt:"N1",ex:[{w:"湿気",r:"しっけ",m:"Nem"},{w:"湿る",r:"しめる",m:"Nemlenmek"},{w:"多湿",r:"たしつ",m:"Çok nemli"}]},
+  {n:387,k:"煙",on:["エン"],kun:["けむ"],m:"Duman",jlpt:"N1",ex:[{w:"煙",r:"けむり",m:"Duman"},{w:"喫煙",r:"きつえん",m:"Sigara içme"},{w:"禁煙",r:"きんえん",m:"Sigara yasağı"}]},
+  {n:388,k:"灰",on:["カイ"],kun:["はい"],m:"Kül",jlpt:"N1",ex:[{w:"灰色",r:"はいいろ",m:"Gri"},{w:"石灰",r:"せっかい",m:"Kireç"},{w:"火山灰",r:"かざんばい",m:"Volkanik kül"}]},
+  {n:389,k:"崩",on:["ホウ"],kun:["くず"],m:"Çökmek",jlpt:"N1",ex:[{w:"崩壊",r:"ほうかい",m:"Çöküş"},{w:"崩れる",r:"くずれる",m:"Çökmek"},{w:"雪崩",r:"なだれ",m:"Çığ"}]},
+  {n:390,k:"揺",on:["ヨウ"],kun:["ゆ"],m:"Sallanmak",jlpt:"N1",ex:[{w:"揺れる",r:"ゆれる",m:"Sallanmak"},{w:"動揺",r:"どうよう",m:"Sarsılma"},{w:"揺らぐ",r:"ゆらぐ",m:"Sallanmak"}]},
+  {n:391,k:"揺",on:["ヨウ"],kun:["ゆ"],m:"Sarsılmak",jlpt:"N1",ex:[{w:"揺さぶる",r:"ゆさぶる",m:"Sarsmak"},{w:"",r:"",m:""},{w:"",r:"",m:""}]},
+  {n:392,k:"塗",on:["ト"],kun:["ぬ"],m:"Boyamak / Sürmek",jlpt:"N1",ex:[{w:"塗る",r:"ぬる",m:"Sürmek"},{w:"塗料",r:"とりょう",m:"Boya"},{w:"塗装",r:"とそう",m:"Kaplama"}]},
+  {n:393,k:"剥",on:["ハク"],kun:["は","む"],m:"Soymak / Çıkarmak",jlpt:"N1",ex:[{w:"剥がす",r:"はがす",m:"Soymak"},{w:"剥奪",r:"はくだつ",m:"El koyma"},{w:"剥ける",r:"むける",m:"Soyulmak"}]},
+  {n:394,k:"磨",on:["マ"],kun:["みが"],m:"Cilalamak / Fırçalamak",jlpt:"N1",ex:[{w:"磨く",r:"みがく",m:"Cilalamak"},{w:"研磨",r:"けんま",m:"Polisaj"},{w:"歯磨き",r:"はみがき",m:"Diş fırçalamak"}]},
+  {n:395,k:"擦",on:["サツ"],kun:["こす","す"],m:"Sürtmek / Ovmak",jlpt:"N1",ex:[{w:"擦る",r:"こする",m:"Ovmak"},{w:"摩擦",r:"まさつ",m:"Sürtünme"},{w:"擦り傷",r:"すりきず",m:"Sıyrık"}]},
+  {n:396,k:"縫",on:["ホウ"],kun:["ぬ"],m:"Dikmek",jlpt:"N1",ex:[{w:"縫う",r:"ぬう",m:"Dikmek"},{w:"裁縫",r:"さいほう",m:"Dikiş"},{w:"縫い目",r:"ぬいめ",m:"Dikiş"}]},
+  {n:397,k:"織",on:["ショク","シキ"],kun:["お"],m:"Dokumak",jlpt:"N1",ex:[{w:"組織",r:"そしき",m:"Organizasyon"},{w:"織物",r:"おりもの",m:"Dokuma"},{w:"機織り",r:"はたおり",m:"Dokumacılık"}]},
+  {n:398,k:"染",on:["セン"],kun:["そ","し"],m:"Boyamak / Bulaşmak",jlpt:"N1",ex:[{w:"染める",r:"そめる",m:"Boyamak"},{w:"感染",r:"かんせん",m:"Enfeksiyon"},{w:"汚染",r:"おせん",m:"Kirlilik"}]},
+  {n:399,k:"繊",on:["セン"],kun:[""],m:"İnce / Lif",jlpt:"N1",ex:[{w:"繊維",r:"せんい",m:"Lif"},{w:"繊細",r:"せんさい",m:"Hassas/İnce"},{w:"化学繊維",r:"かがくせんい",m:"Sentetik lif"}]},
+  {n:400,k:"鍛",on:["タン"],kun:["きた"],m:"Dövmek / Antrenman",jlpt:"N1",ex:[{w:"鍛える",r:"きたえる",m:"Güçlendirmek"},{w:"鍛冶",r:"かじ",m:"Demircilik"},{w:"鍛錬",r:"たんれん",m:"Antrenman"}]},
+
+  // 401-500
+  {n:401,k:"矢",on:["シ"],kun:["や"],m:"Ok",jlpt:"N1",ex:[{w:"矢印",r:"やじるし",m:"Ok işareti"},{w:"矢",r:"や",m:"Ok"},{w:"一矢報いる",r:"いっしむくいる",m:"Misillemede bulunmak"}]},
+  {n:402,k:"弦",on:["ゲン"],kun:["つる"],m:"İp / Kiriş",jlpt:"N1",ex:[{w:"弦楽器",r:"げんがっき",m:"Yaylı çalgılar"},{w:"弦",r:"つる",m:"Yay ipi"},{w:"管弦楽",r:"かんげんがく",m:"Orkestra müziği"}]},
+  {n:403,k:"笛",on:["テキ"],kun:["ふえ"],m:"Flüt / Düdük",jlpt:"N1",ex:[{w:"笛",r:"ふえ",m:"Flüt"},{w:"汽笛",r:"きてき",m:"Düdük"},{w:"横笛",r:"よこぶえ",m:"Yatay flüt"}]},
+  {n:404,k:"鼓",on:["コ"],kun:["つづみ"],m:"Davul",jlpt:"N1",ex:[{w:"太鼓",r:"たいこ",m:"Davul"},{w:"鼓動",r:"こどう",m:"Nabız"},{w:"鼓舞",r:"こぶ",m:"İlham verme"}]},
+  {n:405,k:"詩",on:["シ"],kun:[""],m:"Şiir",jlpt:"N1",ex:[{w:"詩人",r:"しじん",m:"Şair"},{w:"詩集",r:"ししゅう",m:"Şiir kitabı"},{w:"叙情詩",r:"じょじょうし",m:"Lirik şiir"}]},
+  {n:406,k:"謡",on:["ヨウ"],kun:["うたい","うた"],m:"Şarkı / Noh tiyatrosu şarkısı",jlpt:"N1",ex:[{w:"謡曲",r:"ようきょく",m:"Noh şarkısı"},{w:"童謡",r:"どうよう",m:"Ninni"},{w:"民謡",r:"みんよう",m:"Halk türküsü"}]},
+  {n:407,k:"舞",on:["ブ"],kun:["ま"],m:"Dans etmek",jlpt:"N1",ex:[{w:"舞台",r:"ぶたい",m:"Sahne"},{w:"舞踊",r:"ぶよう",m:"Dans"},{w:"鼓舞",r:"こぶ",m:"İlham"}]},
+  {n:408,k:"踊",on:["ヨウ"],kun:["おど"],m:"Zıplamak / Dans",jlpt:"N1",ex:[{w:"踊る",r:"おどる",m:"Dans etmek"},{w:"盆踊り",r:"ぼんおどり",m:"Bon festivali dansı"},{w:"",r:"",m:""}]},
+  {n:409,k:"彫",on:["チョウ"],kun:["ほ"],m:"Oymak / Oyma",jlpt:"N1",ex:[{w:"彫刻",r:"ちょうこく",m:"Heykel"},{w:"彫る",r:"ほる",m:"Oymak"},{w:"木彫り",r:"きぼり",m:"Tahta oyma"}]},
+  {n:410,k:"刻",on:["コク"],kun:["きざ"],m:"Oymak / Saat",jlpt:"N1",ex:[{w:"時刻",r:"じこく",m:"Saat/Zaman"},{w:"彫刻",r:"ちょうこく",m:"Heykel"},{w:"一刻",r:"いっこく",m:"An"}]},
+  {n:411,k:"描",on:["ビョウ"],kun:["えが"],m:"Çizmek / Tasvir etmek",jlpt:"N1",ex:[{w:"描く",r:"えがく",m:"Çizmek"},{w:"素描",r:"そびょう",m:"Eskiz"},{w:"描写",r:"びょうしゃ",m:"Tasvir"}]},
+  {n:412,k:"絵",on:["カイ"],kun:["え"],m:"Resim",jlpt:"N2",ex:[{w:"絵画",r:"かいが",m:"Resim/Tablo"},{w:"絵本",r:"えほん",m:"Resimli kitap"},{w:"水彩画",r:"すいさいが",m:"Suluboya"}]},
+  {n:413,k:"額",on:["ガク"],kun:["ひたい"],m:"Resim çerçevesi / Alın",jlpt:"N2",ex:[{w:"額縁",r:"がくぶち",m:"Çerçeve"},{w:"金額",r:"きんがく",m:"Miktar"},{w:"予算額",r:"よさんがく",m:"Bütçe"}]},
+  {n:414,k:"幕",on:["マク","バク"],kun:[""],m:"Perde / Dönem",jlpt:"N1",ex:[{w:"幕府",r:"ばくふ",m:"Şogunluk"},{w:"幕を開ける",r:"まくをあける",m:"Başlamak"},{w:"終幕",r:"しゅうまく",m:"Son perde"}]},
+  {n:415,k:"劇",on:["ゲキ"],kun:[""],m:"Oyun / Drama",jlpt:"N1",ex:[{w:"演劇",r:"えんげき",m:"Drama"},{w:"劇場",r:"げきじょう",m:"Tiyatro"},{w:"悲劇",r:"ひげき",m:"Trajedi"}]},
+  {n:416,k:"俳",on:["ハイ"],kun:[""],m:"Haiku / Aktör",jlpt:"N1",ex:[{w:"俳句",r:"はいく",m:"Haiku"},{w:"俳優",r:"はいゆう",m:"Aktör"},{w:"俳諧",r:"はいかい",m:"Haiku şiiri"}]},
+  {n:417,k:"句",on:["ク"],kun:[""],m:"Cümle / Dize",jlpt:"N1",ex:[{w:"俳句",r:"はいく",m:"Haiku"},{w:"文句",r:"もんく",m:"Şikayet"},{w:"語句",r:"ごく",m:"Söz/Kelime"}]},
+  {n:418,k:"韻",on:["イン"],kun:[""],m:"Kafiye",jlpt:"N1",ex:[{w:"韻を踏む",r:"いんをふむ",m:"Kafiye yapmak"},{w:"余韻",r:"よいん",m:"Yankı/Kalıntı"},{w:"音韻",r:"おんいん",m:"Fonetik"}]},
+  {n:419,k:"響",on:["キョウ"],kun:["ひび"],m:"Yankılanmak",jlpt:"N1",ex:[{w:"響く",r:"ひびく",m:"Yankılanmak"},{w:"影響",r:"えいきょう",m:"Etki"},{w:"交響",r:"こうきょう",m:"Senfoni"}]},
+  {n:420,k:"奏",on:["ソウ"],kun:["かな"],m:"Çalmak (müzik)",jlpt:"N1",ex:[{w:"演奏",r:"えんそう",m:"Müzik çalma"},{w:"奏でる",r:"かなでる",m:"Çalmak"},{w:"合奏",r:"がっそう",m:"Birlikte çalma"}]},
+  {n:421,k:"鳥",on:["チョウ"],kun:["とり"],m:"Kuş",jlpt:"N4",ex:[{w:"小鳥",r:"ことり",m:"Küçük kuş"},{w:"野鳥",r:"やちょう",m:"Yabani kuş"},{w:"鳥居",r:"とりい",m:"Torii kapısı"}]},
+  {n:422,k:"魚",on:["ギョ"],kun:["さかな","うお"],m:"Balık",jlpt:"N4",ex:[{w:"金魚",r:"きんぎょ",m:"Japon balığı"},{w:"魚介",r:"ぎょかい",m:"Deniz ürünleri"},{w:"魚市場",r:"うおいちば",m:"Balık pazarı"}]},
+  {n:423,k:"虫",on:["チュウ"],kun:["むし"],m:"Böcek",jlpt:"N4",ex:[{w:"害虫",r:"がいちゅう",m:"Zararlı böcek"},{w:"虫歯",r:"むしば",m:"Çürük diş"},{w:"昆虫",r:"こんちゅう",m:"Böcek"}]},
+  {n:424,k:"花",on:["カ"],kun:["はな"],m:"Çiçek",jlpt:"N5",ex:[{w:"花火",r:"はなび",m:"Havai fişek"},{w:"花見",r:"はなみ",m:"Çiçek izleme"},{w:"生花",r:"せいか",m:"Çiçek sanatı"}]},
+  {n:425,k:"木",on:["モク","ボク"],kun:["き","こ"],m:"Ağaç",jlpt:"N5",ex:[{w:"木曜日",r:"もくようび",m:"Perşembe"},{w:"木材",r:"もくざい",m:"Kereste"},{w:"植木",r:"うえき",m:"Bahçe ağacı"}]},
+  {n:426,k:"草",on:["ソウ"],kun:["くさ"],m:"Çim / Ot",jlpt:"N4",ex:[{w:"草原",r:"そうげん",m:"Çayır"},{w:"草花",r:"くさばな",m:"Otsu bitkiler"},{w:"草稿",r:"そうこう",m:"Taslak"}]},
+  {n:427,k:"根",on:["コン"],kun:["ね"],m:"Kök",jlpt:"N4",ex:[{w:"根拠",r:"こんきょ",m:"Dayanak"},{w:"根本",r:"こんぽん",m:"Temel"},{w:"大根",r:"だいこん",m:"Turp"}]},
+  {n:428,k:"葉",on:["ヨウ"],kun:["は"],m:"Yaprak / Kelime",jlpt:"N4",ex:[{w:"紅葉",r:"こうよう",m:"Sonbahar yaprakları"},{w:"言葉",r:"ことば",m:"Kelime/Dil"},{w:"葉書",r:"はがき",m:"Kartpostal"}]},
+  {n:429,k:"実",on:["ジツ"],kun:["み"],m:"Meyve / Gerçek",jlpt:"N4",ex:[{w:"果実",r:"かじつ",m:"Meyve"},{w:"実る",r:"みのる",m:"Meyve vermek"},{w:"実際",r:"じっさい",m:"Gerçekte"}]},
+  {n:430,k:"種",on:["シュ"],kun:["たね"],m:"Tohum / Tür",jlpt:"N4",ex:[{w:"種類",r:"しゅるい",m:"Tür/Çeşit"},{w:"品種",r:"ひんしゅ",m:"Çeşit"},{w:"種",r:"たね",m:"Tohum"}]},
+  {n:431,k:"林",on:["リン"],kun:["はやし"],m:"Orman / İkincil orman",jlpt:"N4",ex:[{w:"森林",r:"しんりん",m:"Orman"},{w:"林業",r:"りんぎょう",m:"Ormancılık"},{w:"密林",r:"みつりん",m:"Sık orman"}]},
+  {n:432,k:"森",on:["シン"],kun:["もり"],m:"Derin orman",jlpt:"N4",ex:[{w:"森林",r:"しんりん",m:"Orman"},{w:"森",r:"もり",m:"Orman"},{w:"森閑",r:"しんかん",m:"Ormanda sessizlik"}]},
+  {n:433,k:"山",on:["サン"],kun:["やま"],m:"Dağ",jlpt:"N5",ex:[{w:"山登り",r:"やまのぼり",m:"Dağa tırmanma"},{w:"火山",r:"かざん",m:"Volkan"},{w:"山脈",r:"さんみゃく",m:"Dağ silsilesi"}]},
+  {n:434,k:"川",on:["セン"],kun:["かわ"],m:"Nehir",jlpt:"N5",ex:[{w:"川岸",r:"かわぎし",m:"Nehir kıyısı"},{w:"川下り",r:"かわくだり",m:"Nehir aşağı gitme"},{w:"小川",r:"おがわ",m:"Dere"}]},
+  {n:435,k:"海",on:["カイ"],kun:["うみ"],m:"Deniz",jlpt:"N5",ex:[{w:"海外",r:"かいがい",m:"Yurt dışı"},{w:"海岸",r:"かいがん",m:"Sahil"},{w:"海水",r:"かいすい",m:"Deniz suyu"}]},
+  {n:436,k:"空",on:["クウ"],kun:["そら","あ","から"],m:"Gökyüzü / Boş",jlpt:"N5",ex:[{w:"空港",r:"くうこう",m:"Havalimanı"},{w:"空気",r:"くうき",m:"Hava"},{w:"空っぽ",r:"からっぽ",m:"Tamamen boş"}]},
+  {n:437,k:"土",on:["ド","ト"],kun:["つち"],m:"Toprak",jlpt:"N5",ex:[{w:"土曜日",r:"どようび",m:"Cumartesi"},{w:"土地",r:"とち",m:"Arazi"},{w:"土台",r:"どだい",m:"Temel"}]},
+  {n:438,k:"石",on:["セキ","シャク","コク"],kun:["いし"],m:"Taş",jlpt:"N5",ex:[{w:"石油",r:"せきゆ",m:"Petrol"},{w:"岩石",r:"がんせき",m:"Kaya"},{w:"宝石",r:"ほうせき",m:"Mücevher"}]},
+  {n:439,k:"火",on:["カ"],kun:["ひ","ほ"],m:"Ateş",jlpt:"N5",ex:[{w:"火曜日",r:"かようび",m:"Salı"},{w:"火事",r:"かじ",m:"Yangın"},{w:"花火",r:"はなび",m:"Havai fişek"}]},
+  {n:440,k:"水",on:["スイ"],kun:["みず"],m:"Su",jlpt:"N5",ex:[{w:"水曜日",r:"すいようび",m:"Çarşamba"},{w:"水道",r:"すいどう",m:"Su tesisatı"},{w:"飲み水",r:"のみず",m:"İçme suyu"}]},
+  {n:441,k:"風",on:["フウ","フ"],kun:["かぜ","かざ"],m:"Rüzgar",jlpt:"N4",ex:[{w:"台風",r:"たいふう",m:"Tayfun"},{w:"風景",r:"ふうけい",m:"Manzara"},{w:"風邪",r:"かぜ",m:"Nezle"}]},
+  {n:442,k:"雨",on:["ウ"],kun:["あめ","あま"],m:"Yağmur",jlpt:"N5",ex:[{w:"大雨",r:"おおあめ",m:"Şiddetli yağmur"},{w:"雨天",r:"うてん",m:"Yağmurlu hava"},{w:"梅雨",r:"つゆ",m:"Yağmur mevsimi"}]},
+  {n:443,k:"雪",on:["セツ"],kun:["ゆき"],m:"Kar",jlpt:"N4",ex:[{w:"雪山",r:"ゆきやま",m:"Karlı dağ"},{w:"積雪",r:"せきせつ",m:"Kar birikimi"},{w:"雪だるま",r:"ゆきだるま",m:"Kardan adam"}]},
+  {n:444,k:"雲",on:["ウン"],kun:["くも"],m:"Bulut",jlpt:"N4",ex:[{w:"雲行き",r:"くもゆき",m:"Hava durumu"},{w:"暗雲",r:"あんうん",m:"Kasvetli bulut"},{w:"入道雲",r:"にゅうどうぐも",m:"Kümülüs bulut"}]},
+  {n:445,k:"光",on:["コウ"],kun:["ひかり","ひか"],m:"Işık",jlpt:"N4",ex:[{w:"観光",r:"かんこう",m:"Turizm"},{w:"光線",r:"こうせん",m:"Işın"},{w:"光る",r:"ひかる",m:"Işıldamak"}]},
+  {n:446,k:"星",on:["セイ","ショウ"],kun:["ほし"],m:"Yıldız",jlpt:"N4",ex:[{w:"星座",r:"せいざ",m:"Takımyıldız"},{w:"衛星",r:"えいせい",m:"Uydu"},{w:"流れ星",r:"ながれぼし",m:"Kayan yıldız"}]},
+  {n:447,k:"月",on:["ゲツ","ガツ"],kun:["つき"],m:"Ay",jlpt:"N5",ex:[{w:"満月",r:"まんげつ",m:"Dolunay"},{w:"月光",r:"げっこう",m:"Ay ışığı"},{w:"三日月",r:"みかづき",m:"Hilal"}]},
+  {n:448,k:"夜",on:["ヤ"],kun:["よる","よ"],m:"Gece",jlpt:"N5",ex:[{w:"夜景",r:"やけい",m:"Gece manzarası"},{w:"深夜",r:"しんや",m:"Gece yarısı"},{w:"夜明け",r:"よあけ",m:"Şafak"}]},
+  {n:449,k:"朝",on:["チョウ"],kun:["あさ"],m:"Sabah",jlpt:"N5",ex:[{w:"朝食",r:"ちょうしょく",m:"Kahvaltı"},{w:"今朝",r:"けさ",m:"Bu sabah"},{w:"早朝",r:"そうちょう",m:"Erken sabah"}]},
+  {n:450,k:"昼",on:["チュウ"],kun:["ひる"],m:"Öğle",jlpt:"N5",ex:[{w:"昼食",r:"ちゅうしょく",m:"Öğle yemeği"},{w:"真昼",r:"まひる",m:"Tam öğle"},{w:"昼休み",r:"ひるやすみ",m:"Öğle arası"}]},
+  {n:451,k:"春",on:["シュン"],kun:["はる"],m:"İlkbahar",jlpt:"N4",ex:[{w:"春分",r:"しゅんぶん",m:"Bahar ekinoksu"},{w:"青春",r:"せいしゅん",m:"Gençlik"},{w:"春休み",r:"はるやすみ",m:"Bahar tatili"}]},
+  {n:452,k:"夏",on:["カ","ゲ"],kun:["なつ"],m:"Yaz",jlpt:"N4",ex:[{w:"夏休み",r:"なつやすみ",m:"Yaz tatili"},{w:"初夏",r:"しょか",m:"Yaz başı"},{w:"真夏",r:"まなつ",m:"Yaz ortası"}]},
+  {n:453,k:"秋",on:["シュウ"],kun:["あき"],m:"Sonbahar",jlpt:"N4",ex:[{w:"秋分",r:"しゅうぶん",m:"Sonbahar ekinoksu"},{w:"秋風",r:"あきかぜ",m:"Sonbahar rüzgarı"},{w:"中秋",r:"ちゅうしゅう",m:"Orta sonbahar"}]},
+  {n:454,k:"冬",on:["トウ"],kun:["ふゆ"],m:"Kış",jlpt:"N4",ex:[{w:"冬眠",r:"とうみん",m:"Kış uykusu"},{w:"冬休み",r:"ふゆやすみ",m:"Kış tatili"},{w:"厳冬",r:"げんとう",m:"Sert kış"}]},
+  {n:455,k:"音",on:["オン","イン"],kun:["おと","ね"],m:"Ses",jlpt:"N4",ex:[{w:"音楽",r:"おんがく",m:"Müzik"},{w:"音声",r:"おんせい",m:"Ses (konuşma)"},{w:"発音",r:"はつおん",m:"Telaffuz"}]},
+  {n:456,k:"色",on:["ショク","シキ"],kun:["いろ"],m:"Renk",jlpt:"N5",ex:[{w:"色彩",r:"しきさい",m:"Renk"},{w:"原色",r:"げんしょく",m:"Ana renk"},{w:"茶色",r:"ちゃいろ",m:"Kahverengi"}]},
+  {n:457,k:"形",on:["ケイ"],kun:["かたち","かた"],m:"Şekil",jlpt:"N4",ex:[{w:"形式",r:"けいしき",m:"Biçim"},{w:"変形",r:"へんけい",m:"Deformasyon"},{w:"形容詞",r:"けいようし",m:"Sıfat"}]},
+  {n:458,k:"道",on:["ドウ","トウ"],kun:["みち"],m:"Yol / Yöntem",jlpt:"N4",ex:[{w:"道路",r:"どうろ",m:"Yol"},{w:"柔道",r:"じゅうどう",m:"Judo"},{w:"道具",r:"どうぐ",m:"Araç-gereç"}]},
+  {n:459,k:"橋",on:["キョウ"],kun:["はし"],m:"Köprü",jlpt:"N4",ex:[{w:"橋を渡る",r:"はしをわたる",m:"Köprüden geçmek"},{w:"陸橋",r:"りっきょう",m:"Köprülü kavşak"},{w:"鉄橋",r:"てっきょう",m:"Demir köprü"}]},
+  {n:460,k:"駅",on:["エキ"],kun:[""],m:"İstasyon",jlpt:"N5",ex:[{w:"駅員",r:"えきいん",m:"İstasyon görevlisi"},{w:"終点駅",r:"しゅうてんえき",m:"Son durak"},{w:"駅前",r:"えきまえ",m:"İstasyon önü"}]},
+  {n:461,k:"港",on:["コウ"],kun:["みなと"],m:"Liman",jlpt:"N4",ex:[{w:"空港",r:"くうこう",m:"Havalimanı"},{w:"港町",r:"みなとまち",m:"Liman şehri"},{w:"入港",r:"にゅうこう",m:"Limana giriş"}]},
+  {n:462,k:"船",on:["セン"],kun:["ふね","ふな"],m:"Gemi",jlpt:"N4",ex:[{w:"船旅",r:"ふなたび",m:"Deniz yolculuğu"},{w:"汽船",r:"きせん",m:"Buharlı gemi"},{w:"船長",r:"せんちょう",m:"Kaptan"}]},
+  {n:463,k:"車",on:["シャ"],kun:["くるま"],m:"Araba / Araç",jlpt:"N5",ex:[{w:"電車",r:"でんしゃ",m:"Tren"},{w:"自動車",r:"じどうしゃ",m:"Otomobil"},{w:"車道",r:"しゃどう",m:"Taşıt yolu"}]},
+  {n:464,k:"飛",on:["ヒ"],kun:["と"],m:"Uçmak",jlpt:"N4",ex:[{w:"飛行機",r:"ひこうき",m:"Uçak"},{w:"飛ぶ",r:"とぶ",m:"Uçmak"},{w:"飛躍",r:"ひやく",m:"Sıçrama"}]},
+  {n:465,k:"走",on:["ソウ"],kun:["はし"],m:"Koşmak",jlpt:"N4",ex:[{w:"走る",r:"はしる",m:"Koşmak"},{w:"競走",r:"きょうそう",m:"Yarış"},{w:"脱走",r:"だっそう",m:"Kaçış"}]},
+  {n:466,k:"泳",on:["エイ"],kun:["およ"],m:"Yüzmek",jlpt:"N4",ex:[{w:"水泳",r:"すいえい",m:"Yüzme"},{w:"泳ぐ",r:"およぐ",m:"Yüzmek"},{w:"背泳ぎ",r:"せおよぎ",m:"Sırt üstü yüzme"}]},
+  {n:467,k:"食",on:["ショク","ジキ"],kun:["た","く"],m:"Yemek",jlpt:"N5",ex:[{w:"食事",r:"しょくじ",m:"Yemek"},{w:"食べ物",r:"たべもの",m:"Yiyecek"},{w:"飲食",r:"いんしょく",m:"Yiyip içme"}]},
+  {n:468,k:"飲",on:["イン"],kun:["の"],m:"İçmek",jlpt:"N5",ex:[{w:"飲み物",r:"のみもの",m:"İçecek"},{w:"飲食",r:"いんしょく",m:"Yiyip içme"},{w:"飲酒",r:"いんしゅ",m:"Alkol alma"}]},
+  {n:469,k:"読",on:["ドク","トク","トウ"],kun:["よ"],m:"Okumak",jlpt:"N5",ex:[{w:"読む",r:"よむ",m:"Okumak"},{w:"読書",r:"どくしょ",m:"Okuma"},{w:"音読み",r:"おんよみ",m:"On okuyuşu"}]},
+  {n:470,k:"書",on:["ショ"],kun:["か"],m:"Yazmak",jlpt:"N5",ex:[{w:"書く",r:"かく",m:"Yazmak"},{w:"教科書",r:"きょうかしょ",m:"Ders kitabı"},{w:"書道",r:"しょどう",m:"Hat sanatı"}]},
+  {n:471,k:"聞",on:["ブン","モン"],kun:["き"],m:"Duymak / Sormak",jlpt:"N5",ex:[{w:"聞く",r:"きく",m:"Duymak"},{w:"新聞",r:"しんぶん",m:"Gazete"},{w:"見聞",r:"けんぶん",m:"Bilgi"}]},
+  {n:472,k:"話",on:["ワ"],kun:["はな","はなし"],m:"Konuşmak",jlpt:"N5",ex:[{w:"話す",r:"はなす",m:"Konuşmak"},{w:"電話",r:"でんわ",m:"Telefon"},{w:"会話",r:"かいわ",m:"Konuşma"}]},
+  {n:473,k:"歌",on:["カ"],kun:["うた"],m:"Şarkı",jlpt:"N4",ex:[{w:"歌う",r:"うたう",m:"Şarkı söylemek"},{w:"歌手",r:"かしゅ",m:"Şarkıcı"},{w:"国歌",r:"こっか",m:"Milli marş"}]},
+  {n:474,k:"買",on:["バイ"],kun:["か"],m:"Satın almak",jlpt:"N5",ex:[{w:"買う",r:"かう",m:"Satın almak"},{w:"売買",r:"ばいばい",m:"Alım satım"},{w:"買い物",r:"かいもの",m:"Alışveriş"}]},
+  {n:475,k:"売",on:["バイ"],kun:["う"],m:"Satmak",jlpt:"N5",ex:[{w:"売る",r:"うる",m:"Satmak"},{w:"販売",r:"はんばい",m:"Satış"},{w:"売り場",r:"うりば",m:"Satış yeri"}]},
+  {n:476,k:"使",on:["シ"],kun:["つか"],m:"Kullanmak",jlpt:"N5",ex:[{w:"使う",r:"つかう",m:"Kullanmak"},{w:"使用",r:"しよう",m:"Kullanım"},{w:"天使",r:"てんし",m:"Melek"}]},
+  {n:477,k:"作",on:["サク"],kun:["つく"],m:"Yapmak",jlpt:"N5",ex:[{w:"作る",r:"つくる",m:"Yapmak"},{w:"作品",r:"さくひん",m:"Eser"},{w:"製作",r:"せいさく",m:"Yapım"}]},
+  {n:478,k:"教",on:["キョウ"],kun:["おし","おそ"],m:"Öğretmek",jlpt:"N5",ex:[{w:"教える",r:"おしえる",m:"Öğretmek"},{w:"教育",r:"きょういく",m:"Eğitim"},{w:"宗教",r:"しゅうきょう",m:"Din"}]},
+  {n:479,k:"習",on:["シュウ"],kun:["なら"],m:"Alışmak / Pratik yapmak",jlpt:"N4",ex:[{w:"練習",r:"れんしゅう",m:"Pratik"},{w:"習慣",r:"しゅうかん",m:"Alışkanlık"},{w:"学習",r:"がくしゅう",m:"Öğrenme"}]},
+  {n:480,k:"遊",on:["ユウ"],kun:["あそ"],m:"Oynamak / Eğlenmek",jlpt:"N4",ex:[{w:"遊ぶ",r:"あそぶ",m:"Oynamak"},{w:"遊園地",r:"ゆうえんち",m:"Luna parkı"},{w:"遊覧",r:"ゆうらん",m:"Tur"}]},
+  {n:481,k:"働",on:["ドウ"],kun:["はたら"],m:"Çalışmak",jlpt:"N4",ex:[{w:"働く",r:"はたらく",m:"Çalışmak"},{w:"働き",r:"はたらき",m:"Çalışma / İşlev"},{w:"",r:"",m:""}]},
+  {n:482,k:"休",on:["キュウ"],kun:["やす"],m:"Dinlenmek",jlpt:"N5",ex:[{w:"休む",r:"やすむ",m:"Dinlenmek"},{w:"休日",r:"きゅうじつ",m:"Tatil günü"},{w:"連休",r:"れんきゅう",m:"Uzun tatil"}]},
+  {n:483,k:"起",on:["キ"],kun:["お"],m:"Kalkmak / Başlamak",jlpt:"N4",ex:[{w:"起きる",r:"おきる",m:"Kalkmak"},{w:"起こる",r:"おこる",m:"Olmak"},{w:"早起き",r:"はやおき",m:"Erken kalkma"}]},
+  {n:484,k:"寝",on:["シン"],kun:["ね","い"],m:"Uyumak",jlpt:"N4",ex:[{w:"寝る",r:"ねる",m:"Uyumak"},{w:"就寝",r:"しゅうしん",m:"Uyumaya gitme"},{w:"寝坊",r:"ねぼう",m:"Geç uyuma"}]},
+  {n:485,k:"着",on:["チャク","ジャク"],kun:["き","つ"],m:"Giymek / Gelmek",jlpt:"N4",ex:[{w:"着く",r:"つく",m:"Gelmek"},{w:"着る",r:"きる",m:"Giymek"},{w:"到着",r:"とうちゃく",m:"Varış"}]},
+  {n:486,k:"脱",on:["ダツ"],kun:["ぬ"],m:"Çıkarmak / Ayrılmak",jlpt:"N3",ex:[{w:"脱ぐ",r:"ぬぐ",m:"Çıkarmak"},{w:"脱出",r:"だっしゅつ",m:"Kaçış"},{w:"離脱",r:"りだつ",m:"Ayrılma"}]},
+  {n:487,k:"切",on:["セツ"],kun:["き"],m:"Kesmek",jlpt:"N5",ex:[{w:"切る",r:"きる",m:"Kesmek"},{w:"大切",r:"たいせつ",m:"Önemli"},{w:"親切",r:"しんせつ",m:"Nazik"}]},
+  {n:488,k:"引",on:["イン"],kun:["ひ"],m:"Çekmek",jlpt:"N4",ex:[{w:"引く",r:"ひく",m:"Çekmek"},{w:"割引",r:"わりびき",m:"İndirim"},{w:"吸引",r:"きゅういん",m:"Emme"}]},
+  {n:489,k:"押",on:["オウ"],kun:["お"],m:"İtmek / Basmak",jlpt:"N4",ex:[{w:"押す",r:"おす",m:"İtmek"},{w:"押し入れ",r:"おしいれ",m:"Dolap"},{w:"押印",r:"おういん",m:"Mühürleme"}]},
+  {n:490,k:"投",on:["トウ"],kun:["な"],m:"Atmak / Yatırım",jlpt:"N4",ex:[{w:"投げる",r:"なげる",m:"Atmak"},{w:"投資",r:"とうし",m:"Yatırım"},{w:"投票",r:"とうひょう",m:"Oy verme"}]},
+  {n:491,k:"受",on:["ジュ"],kun:["う"],m:"Almak",jlpt:"N4",ex:[{w:"受け取る",r:"うけとる",m:"Almak"},{w:"受験",r:"じゅけん",m:"Sınava girmek"},{w:"受動",r:"じゅどう",m:"Pasif"}]},
+  {n:492,k:"渡",on:["ト"],kun:["わた"],m:"Geçmek / Teslim etmek",jlpt:"N4",ex:[{w:"渡す",r:"わたす",m:"Teslim etmek"},{w:"渡る",r:"わたる",m:"Geçmek"},{w:"渡航",r:"とこう",m:"Yurt dışı seyahat"}]},
+  {n:493,k:"集",on:["シュウ"],kun:["あつ"],m:"Toplamak",jlpt:"N4",ex:[{w:"集める",r:"あつめる",m:"Toplamak"},{w:"集合",r:"しゅうごう",m:"Toplanma"},{w:"収集",r:"しゅうしゅう",m:"Koleksiyon"}]},
+  {n:494,k:"別",on:["ベツ"],kun:["わか"],m:"Ayrılmak / Farklı",jlpt:"N4",ex:[{w:"別れる",r:"わかれる",m:"Ayrılmak"},{w:"区別",r:"くべつ",m:"Ayrım"},{w:"特別",r:"とくべつ",m:"Özel"}]},
+  {n:495,k:"話",on:["ワ"],kun:["はな"],m:"Konuşma",jlpt:"N5",ex:[{w:"話し合う",r:"はなしあう",m:"Görüşmek"},{w:"話題",r:"わだい",m:"Konu"},{w:"昔話",r:"むかしばなし",m:"Eski masal"}]},
+  {n:496,k:"帰",on:["キ"],kun:["かえ"],m:"Dönmek",jlpt:"N5",ex:[{w:"帰る",r:"かえる",m:"Eve dönmek"},{w:"帰宅",r:"きたく",m:"Eve dönüş"},{w:"帰国",r:"きこく",m:"Ülkeye dönüş"}]},
+  {n:497,k:"来",on:["ライ"],kun:["く","き","こ"],m:"Gelmek",jlpt:"N5",ex:[{w:"来る",r:"くる",m:"Gelmek"},{w:"未来",r:"みらい",m:"Gelecek"},{w:"外来",r:"がいらい",m:"Yabancı kökenli"}]},
+  {n:498,k:"去",on:["キョ","コ"],kun:["さ"],m:"Gitmek / Geçmiş",jlpt:"N4",ex:[{w:"過去",r:"かこ",m:"Geçmiş"},{w:"去る",r:"さる",m:"Gitmek"},{w:"消去",r:"しょうきょ",m:"Silme"}]},
+  {n:499,k:"始",on:["シ"],kun:["はじ"],m:"Başlamak",jlpt:"N4",ex:[{w:"始める",r:"はじめる",m:"Başlamak"},{w:"開始",r:"かいし",m:"Başlangıç"},{w:"始まり",r:"はじまり",m:"Başlangıç"}]},
+  {n:500,k:"終",on:["シュウ"],kun:["お"],m:"Bitmek / Son",jlpt:"N4",ex:[{w:"終わる",r:"おわる",m:"Bitmek"},{w:"終了",r:"しゅうりょう",m:"Bitiş"},{w:"最終",r:"さいしゅう",m:"Son"}]},
+];
+
+// ── STATE ──
+let currentView = 'list';
+let filteredData = [...KANJI];
+
+// ── LIST / GRID ──
+function setView(v) {
+  currentView = v;
+  ['grid','list','flash'].forEach(x => {
+    document.getElementById(x+'-container').classList.toggle('active', v===x);
+    const btn = document.getElementById('btn-'+x);
+    if (btn) btn.classList.toggle('active', v===x);
+  });
+  const searchRow = document.getElementById('search').parentElement;
+  // hide search/filter in flash mode
+  document.getElementById('search').style.display = v==='flash' ? 'none' : '';
+  document.getElementById('jlpt-filter').style.display = v==='flash' ? 'none' : '';
+  document.getElementById('shown-count').parentElement.style.display = v==='flash' ? 'none' : '';
+  if (v !== 'flash') render();
+}
+
+function filter() {
+  const q = document.getElementById('search').value.toLowerCase();
+  const jlpt = document.getElementById('jlpt-filter').value;
+  filteredData = KANJI.filter(k => {
+    const matchJlpt = !jlpt || k.jlpt === jlpt;
+    if (!q) return matchJlpt;
+    return matchJlpt && (
+      k.k.includes(q) ||
+      k.m.toLowerCase().includes(q) ||
+      k.on.some(r => r.toLowerCase().includes(q)) ||
+      k.kun.some(r => r.toLowerCase().includes(q)) ||
+      k.ex.some(e => e.w.includes(q) || e.r.includes(q) || e.m.toLowerCase().includes(q))
+    );
+  });
+  document.getElementById('shown-count').textContent = filteredData.length;
+  render();
+}
+
+function render() {
+  const noRes = document.getElementById('no-results');
+  noRes.style.display = filteredData.length === 0 ? 'block' : 'none';
+  if (currentView === 'grid') {
+    document.getElementById('grid-container').innerHTML = filteredData.map(k => `
+      <div class="kanji-card" onclick="openModal(${k.n})">
+        <div class="num">#${k.n}</div>
+        <div class="kanji-char">${k.k}</div>
+        <div class="readings">${k.on[0]||'—'} / ${k.kun[0]||'—'}</div>
+        <div class="meaning">${k.m}</div>
+        <div class="example">${k.ex[0]?.w||''} ${k.ex[0]?.r ? '('+k.ex[0].r+')' : ''}</div>
+      </div>`).join('');
+  } else {
+    document.getElementById('list-rows').innerHTML = filteredData.map(k => `
+      <div class="list-row" onclick="openModal(${k.n})">
+        <div class="n">${k.n}</div>
+        <div class="k">${k.k}</div>
+        <div class="r">${k.on.join('、')||'—'}<br><span style="color:#1a6b3c">${k.kun.join('、')||'—'}</span></div>
+        <div class="m">${k.m}</div>
+        <div class="e">${k.ex[0]?.w||''} ${k.ex[0]?.r ? '「'+k.ex[0].r+'」' : ''} ${k.ex[0]?.m ? '— '+k.ex[0].m : ''}</div>
+      </div>`).join('');
+  }
+}
+
+// ── MODAL ──
+function openModal(n) {
+  const k = KANJI.find(x => x.n === n);
+  if (!k) return;
+  document.getElementById('m-num').textContent = `#${k.n} · JLPT ${k.jlpt}`;
+  document.getElementById('m-kanji').textContent = k.k;
+  document.getElementById('m-meaning').textContent = k.m;
+  document.getElementById('m-on').innerHTML = k.on.length ? k.on.map(r=>`<div class="pill">${r}</div>`).join('') : '<div class="pill">—</div>';
+  document.getElementById('m-kun').innerHTML = k.kun.length ? k.kun.map(r=>`<div class="pill kun">${r}</div>`).join('') : '<div class="pill kun">—</div>';
+  document.getElementById('m-examples').innerHTML = k.ex.filter(e=>e.w).map(e=>`
+    <div class="example-item">
+      <div class="ex-word">${e.w}</div><div class="ex-read">${e.r}</div><div class="ex-mean">${e.m}</div>
+    </div>`).join('');
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal(e) { if (e.target.id==='modal-overlay') closeModalBtn(); }
+function closeModalBtn() { document.getElementById('modal-overlay').classList.remove('open'); }
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeModalBtn(); });
+
+// ── FLASHCARD ──
+let fcDeck = [];
+let fcIndex = 0;
+let fcRevealed = false;
+let fcScore = { correct:0, wrong:0, pas:0 };
+let fcAnimating = false;
+let fcIsFlipped = false;  // track flip state independently so toggling always works
+
+function updateLiveScore() {
+  document.getElementById('ls-w').textContent = fcScore.wrong;
+  document.getElementById('ls-p').textContent = fcScore.pas;
+  document.getElementById('ls-g').textContent = fcScore.correct;
+}
+
+function flashReset() {
+  const jlpt = document.getElementById('fc-jlpt').value;
+  fcDeck = (jlpt ? KANJI.filter(k=>k.jlpt===jlpt) : [...KANJI])
+    .map(k=>({...k}))
+    .sort(()=>Math.random()-0.5);
+  fcIndex = 0;
+  fcScore = {correct:0, wrong:0, pas:0};
+  fcRevealed = false;
+  fcIsFlipped = false;
+  updateLiveScore();
+  document.getElementById('fc-score').classList.remove('open');
+  document.querySelector('.fc-scene').style.display = '';
+  document.getElementById('fc-flipper').classList.remove('flipped','exit-left','enter-right');
+  document.getElementById('fc-input-row').style.display = 'flex';
+  document.getElementById('fc-next-row').classList.remove('visible');
+  flashShowCard();
+}
+
+function flashShowCard() {
+  if (fcIndex >= fcDeck.length) { flashFinish(); return; }
+  const k = fcDeck[fcIndex];
+  document.getElementById('fc-badge').textContent = k.jlpt;
+  document.getElementById('fc-num').textContent = '#' + k.n;
+  document.getElementById('fc-kanji').textContent = k.k;
+  document.getElementById('fc-count').textContent = (fcIndex+1) + ' / ' + fcDeck.length;
+  document.getElementById('fc-fill').style.width = ((fcIndex/fcDeck.length)*100)+'%';
+  fcRevealed = false;
+  fcIsFlipped = false;
+  const inp = document.getElementById('fc-answer-input');
+  inp.value = ''; inp.className = ''; inp.disabled = false;
+  document.getElementById('fc-flipper').classList.remove('flipped');
+  document.getElementById('fc-input-row').style.display = 'flex';
+  document.getElementById('fc-next-row').classList.remove('visible');
+  document.getElementById('fc-back-result').className = 'fc-back-result neutral';
+  document.getElementById('fc-back-result').textContent = '—';
+  document.getElementById('fc-user-ans').style.display = 'none';
+}
+
+// Toggle flip on BOTH faces — tap either side to flip
+function fcToggleFlip() {
+  if (fcAnimating) return;
+  if (!fcIsFlipped) {
+    // flipping to back = reveal
+    if (!fcRevealed) flashReveal();
+    else {
+      fcIsFlipped = true;
+      document.getElementById('fc-flipper').classList.add('flipped');
+    }
+  } else {
+    // flipping back to front
+    fcIsFlipped = false;
+    document.getElementById('fc-flipper').classList.remove('flipped');
+    // show input row again if already revealed (for reference, disabled)
+    if (fcRevealed) {
+      document.getElementById('fc-input-row').style.display = 'flex';
+    }
+  }
+}
+
+document.getElementById('fc-front').addEventListener('click', fcToggleFlip);
+document.getElementById('fc-back').addEventListener('click', function(e) {
+  // Don't toggle if user is scrolling the back content
+  fcToggleFlip();
+});
+
+function flashReveal() {
+  fcRevealed = true;
+  fcIsFlipped = true;
+  const k = fcDeck[fcIndex];
+  const inp = document.getElementById('fc-answer-input');
+  const userAnswer = inp.value.trim();
+
+  // correctness check
+  const correctVariants = k.m.toLowerCase().split(/[/,]/).map(s=>s.trim());
+  const userNorm = userAnswer.toLowerCase().trim();
+  const isCorrect = userAnswer !== '' && correctVariants.some(v =>
+    userNorm === v || v.includes(userNorm) || userNorm.includes(v)
+  );
+
+  if (userAnswer !== '') {
+    if (isCorrect) fcScore.correct++; else fcScore.wrong++;
+    inp.className = isCorrect ? 'correct' : 'wrong';
+  } else {
+    fcScore.pas++;
+  }
+  inp.disabled = true;
+  updateLiveScore();
+
+  // back face result badge
+  const badge = document.getElementById('fc-back-result');
+  const userAnsEl = document.getElementById('fc-user-ans');
+  if (userAnswer !== '') {
+    badge.className = 'fc-back-result ' + (isCorrect ? 'correct' : 'wrong');
+    badge.textContent = isCorrect ? '✓ Doğru!' : '✗ Yanlış';
+    if (!isCorrect) {
+      userAnsEl.style.display = 'block';
+      userAnsEl.textContent = 'Senin cevabın: ' + userAnswer;
+    }
+  } else {
+    badge.className = 'fc-back-result neutral';
+    badge.textContent = 'Pas';
+  }
+
+  // fill back face content
+  document.getElementById('fc-meaning').textContent = k.m;
+  document.getElementById('fc-pills').innerHTML =
+    k.on.map(r=>`<div class="pill">${r}</div>`).join('') +
+    k.kun.map(r=>`<div class="pill kun">${r}</div>`).join('');
+  document.getElementById('fc-examples').innerHTML = k.ex.filter(e=>e.w).map(e=>`
+    <div class="fc-ans-ex">
+      <div class="ew">${e.w}</div><div class="er">${e.r}</div><div class="em">${e.m}</div>
+    </div>`).join('');
+
+  // flip to back
+  document.getElementById('fc-flipper').classList.add('flipped');
+  document.getElementById('fc-input-row').style.display = 'none';
+  document.getElementById('fc-next-row').classList.add('visible');
+}
+
+function flashNext() {
+  if (fcAnimating) return;
+  fcAnimating = true;
+  const flipper = document.getElementById('fc-flipper');
+  flipper.classList.add('exit-left');
+  document.getElementById('fc-next-row').classList.remove('visible');
+  document.getElementById('fc-input-row').style.display = 'none';
+  setTimeout(()=>{
+    fcIndex++;
+    if (fcIndex >= fcDeck.length) { fcAnimating = false; flashFinish(); return; }
+    flipper.style.transition = 'none';
+    flipper.classList.remove('exit-left','flipped');
+    flipper.classList.add('enter-right');
+    void flipper.offsetWidth;
+    flashShowCard();
+    requestAnimationFrame(()=>{
+      flipper.style.transition = 'transform 0.6s cubic-bezier(.25,0,.2,1), opacity 0.4s';
+      flipper.classList.remove('enter-right');
+      setTimeout(()=>{
+        flipper.style.transition = '';
+        fcAnimating = false;
+      }, 600);
+    });
+  }, 800);
+}
+
+function flashFinish() {
+  document.querySelector('.fc-scene').style.display = 'none';
+  document.getElementById('fc-input-row').style.display = 'none';
+  document.getElementById('fc-next-row').classList.remove('visible');
+  document.getElementById('sc-w').textContent = fcScore.wrong;
+  document.getElementById('sc-p').textContent = fcScore.pas;
+  document.getElementById('sc-g').textContent = fcScore.correct;
+  const total = fcDeck.length;
+  const pct = Math.round((fcScore.correct / total) * 100);
+  document.getElementById('fc-score-sub').textContent = total + " kartın " + pct + "%'ini doğru bildin";
+  document.getElementById('fc-score').classList.add('open');
+  document.getElementById('fc-fill').style.width = '100%';
+}
+
+// Enter: reveal or next
+document.getElementById('fc-answer-input').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    if (!fcRevealed) flashReveal();
+    else flashNext();
+  }
+});
+
+// Swipe right → next card (after reveal)
+// Use touchmove to detect scroll intent early, preventing false swipes
+(function(){
+  let startX = 0, startY = 0, isScrolling = false;
+  const scene = document.querySelector('.fc-scene');
+
+  scene.addEventListener('touchstart', e=>{
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    isScrolling = false;
+  }, {passive:true});
+
+  scene.addEventListener('touchmove', e=>{
+    if (!isScrolling) {
+      const dx = Math.abs(e.touches[0].clientX - startX);
+      const dy = Math.abs(e.touches[0].clientY - startY);
+      // if first move is mostly vertical, it's a scroll
+      if (dy > dx) isScrolling = true;
+    }
+  }, {passive:true});
+
+  scene.addEventListener('touchend', e=>{
+    if (isScrolling) return;
+    const dx = e.changedTouches[0].clientX - startX;
+    const dy = Math.abs(e.changedTouches[0].clientY - startY);
+    if (dx > 55 && dy < 50 && fcRevealed) flashNext();
+  }, {passive:true});
+})();
+
+// ── EVENTS ──
+document.getElementById('search').addEventListener('input', filter);
+document.getElementById('jlpt-filter').addEventListener('change', filter);
+
+// ── INIT ──
+(function init(){
+  flashReset();
+  setView('list');
+  document.getElementById('shown-count').textContent = filteredData.length;
+  render();
+})();
+</script>
+</body>
+</html>
