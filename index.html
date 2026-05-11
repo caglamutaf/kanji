@@ -167,7 +167,8 @@
   .fc-back-result.wrong   { background: #fde8e8; color: #c0392b; border: 1px solid #f5c6c6; }
   .fc-back-result.neutral { background: var(--paper); color: var(--muted); border: 1px solid var(--border); }
   .fc-tap-back-hint { font-family: 'DM Mono', monospace; font-size: 0.6rem; color: var(--muted); opacity: 0.5; letter-spacing: 0.06em; }
-
+  .fc-write-btn { font-family: 'DM Mono', monospace; font-size: 0.68rem; background: var(--ink); color: var(--paper); border: none; padding: 0.22rem 0.6rem; border-radius: 2px; cursor: pointer; letter-spacing: 0.06em; white-space: nowrap; }
+  .fc-write-btn:active { background: var(--red); }
   .fc-user-ans { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); margin-bottom: 0.6rem; width: 100%; }
   .fc-ans-meaning { font-family: 'Playfair Display', serif; font-size: 1.5rem; color: var(--ink); margin-bottom: 0.7rem; width: 100%; }
   .fc-ans-pills { display: flex; gap: 0.35rem; flex-wrap: wrap; margin-bottom: 0.8rem; width: 100%; }
@@ -221,6 +222,27 @@
   .sn-label { font-family: 'DM Mono', monospace; font-size: 0.6rem; color: var(--muted); margin-top: 0.2rem; }
   .flash-restart { background: var(--red); color: white; border: none; padding: 0.85rem 2rem; font-family: 'DM Mono', monospace; font-size: 0.82rem; letter-spacing: 0.1em; cursor: pointer; border-radius: 2px; }
 
+  .stroke-overlay { display:none; position:fixed; inset:0; background:rgba(26,20,16,0.85); z-index:300; align-items:center; justify-content:center; }
+  .stroke-overlay.open { display:flex; }
+  .stroke-modal { background:#fff; border-radius:8px; width:93%; max-width:430px; padding:1.2rem; display:flex; flex-direction:column; align-items:center; gap:0.8rem; }
+  .stroke-header { display:flex; align-items:center; gap:0.8rem; width:100%; }
+  .stroke-kanji { font-family:'Noto Serif JP',serif; font-size:2.5rem; color:#1a1410; }
+  .stroke-sub { font-family:'DM Mono',monospace; font-size:0.62rem; color:#8a7f72; letter-spacing:0.08em; }
+  .stroke-btns { width:100%; display:flex; }
+  .stroke-btn { flex:1; padding:0.65rem; border:none; border-radius:3px; font-family:'DM Mono',monospace; font-size:0.75rem; cursor:pointer; letter-spacing:0.06em; }
+
+  /* FAVS VIEW */
+  .favs-view { display:none; }
+  .favs-view.active { display:block; }
+  .fav-star-btn {
+    background:none; border:none; cursor:pointer;
+    font-size:1.1rem; padding:0.1rem 0.3rem;
+    line-height:1; transition:transform 0.15s;
+    color:var(--border);
+  }
+  .fav-star-btn.active { color:#f0b429; }
+  .fav-star-btn:active { transform:scale(1.3); }
+
   @media (max-width: 700px) {
     header { padding: 0.9rem 1rem; }
     .header-inner { gap: 0.6rem; }
@@ -255,6 +277,7 @@
         <button class="view-btn" id="btn-grid" onclick="setView('grid')">▦</button>
         <button class="view-btn" id="btn-list" onclick="setView('list')">☰ Liste</button>
         <button class="view-btn" id="btn-flash" onclick="setView('flash')">⟳ Flashcard</button>
+        <button class="view-btn" id="btn-favs" onclick="setView('favs')">★ <span id="fav-count-badge"></span></button>
       </div>
       <div class="count-badge"><span id="shown-count">500</span> / 500</div>
     </div>
@@ -303,7 +326,12 @@
         <div class="fc-face fc-back" id="fc-back">
           <div class="fc-back-top">
             <div id="fc-back-result" class="fc-back-result neutral">—</div>
-            <span class="fc-tap-back-hint">bas → çevir</span>
+            <div style="display:flex;align-items:center;gap:0.4rem">
+              <button class="fav-star-btn" id="fc-fav-btn" onclick="toggleFavFC(event)" style="font-size:1.3rem;">☆</button>
+              <button class="fc-write-btn" onclick="openWriteModal(event)">✎ Yaz</button>
+              <button class="fc-write-btn" id="fc-detay-btn" onclick="openDetayModal(event)" style="background:var(--gold);display:none;">⊕ Detay</button>
+              <span class="fc-tap-back-hint">bas → çevir</span>
+            </div>
           </div>
           <div id="fc-user-ans" class="fc-user-ans" style="display:none"></div>
           <div class="fc-ans-meaning" id="fc-meaning"></div>
@@ -316,7 +344,7 @@
 
     <!-- input row — shown when front is visible -->
     <div class="flash-input-row" id="fc-input-row">
-      <input type="text" id="fc-answer-input" placeholder="Anlamını yaz..." autocomplete="off" autocorrect="off" spellcheck="false">
+      <input type="text" id="fc-answer-input" placeholder="Anlamını yaz..." autocomplete="off" autocorrect="off" spellcheck="false" inputmode="text" style="font-size:16px;">
       <button class="flash-show-btn" onclick="flashReveal()">Göster</button>
     </div>
 
@@ -339,12 +367,64 @@
       <button class="flash-restart" onclick="flashReset()">Tekrar Başla</button>
     </div>
   </div>
+
+  <!-- FAVS VIEW -->
+  <div id="favs-container" class="favs-view">
+    <div id="favs-empty" style="text-align:center;padding:4rem 1rem;font-family:'Noto Serif JP',serif;font-size:1rem;color:var(--muted);">
+      <div style="font-size:2.5rem;margin-bottom:0.8rem;">★</div>
+      Henüz favori eklemediniz.<br>
+      <span style="font-size:0.8rem;font-family:'DM Mono',monospace;">Kartlardaki ★ butonuna basın.</span>
+    </div>
+    <div class="list-header" id="favs-header" style="display:none;"><div>#</div><div>漢字</div><div>Okuyuş</div><div>Anlam</div><div>Örnek</div></div>
+    <div id="favs-rows"></div>
+  </div>
+
 </main>
+
+
+<!-- DETAY MODAL -->
+<div class="stroke-overlay" id="detay-overlay">
+  <div class="stroke-modal" style="max-height:80vh;overflow-y:auto;">
+    <div class="stroke-header" style="margin-bottom:0.8rem;">
+      <span class="stroke-kanji" id="detay-kanji">日</span>
+      <div>
+        <div style="font-family:'Playfair Display',serif;font-size:1rem;color:#1a1410;" id="detay-meaning"></div>
+        <div style="font-family:'DM Mono',monospace;font-size:0.6rem;color:#8a7f72;letter-spacing:0.1em;text-transform:uppercase;margin-top:0.2rem;">Köken & Hikaye</div>
+      </div>
+    </div>
+    <div id="detay-content" style="width:100%;font-size:0.85rem;line-height:1.7;color:#3a3028;font-family:'Noto Sans JP',sans-serif;"></div>
+    <button onclick="closeDetayModal()" style="width:100%;padding:0.7rem;background:#f0ebe0;border:none;border-radius:3px;font-family:'DM Mono',monospace;font-size:0.75rem;color:#8a7f72;cursor:pointer;margin-top:1rem;">Kapat</button>
+  </div>
+</div>
+
+<!-- WRITE MODAL -->
+<div class="stroke-overlay" id="stroke-overlay">
+  <div class="stroke-modal">
+    <div class="stroke-header">
+      <span class="stroke-kanji" id="stroke-kanji">日</span>
+      <div class="stroke-sub" id="stroke-hint-txt">Serbest yaz</div>
+    </div>
+    <div style="position:relative;width:100%;max-width:340px;aspect-ratio:1/1;">
+      <canvas id="stroke-canvas" width="340" height="340" style="width:100%;height:100%;border:1px solid #d4c9b8;border-radius:4px;background:#fafafa;touch-action:none;cursor:crosshair;display:block;"></canvas>
+      <div id="stroke-guide" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;">
+        <span id="stroke-guide-char" style="font-family:'Noto Serif JP',serif;font-size:11rem;color:rgba(0,0,0,0.07);line-height:1;user-select:none;">日</span>
+      </div>
+    </div>
+    <div class="stroke-btns">
+      <button class="stroke-btn" onclick="strokeClearCanvas()" style="background:#fde8e8;color:#c0392b;border:1px solid #f5c6c6;">Temizle</button>
+      <button class="stroke-btn" onclick="strokeToggleGuide()" style="background:#eef7f1;color:#1a6b3c;border:1px solid #c8e6d4;" id="stroke-guide-btn">Kilavuz: Acik</button>
+    </div>
+    <button onclick="closeWriteModal()" style="width:100%;padding:0.7rem;background:#f0ebe0;border:none;border-radius:3px;font-family:'DM Mono',monospace;font-size:0.75rem;color:#8a7f72;cursor:pointer;">Kapat</button>
+  </div>
+</div>
 
 <div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
   <div class="modal" id="modal-box">
     <button class="modal-close" onclick="closeModalBtn()">✕</button>
-    <div class="modal-num" id="m-num"></div>
+    <div class="modal-num" id="m-num" style="display:flex;align-items:center;justify-content:space-between;">
+      <span id="m-num-text"></span>
+      <button class="fav-star-btn" id="m-fav-btn" onclick="toggleFavModal()" style="font-size:1.4rem;"></button>
+    </div>
     <div class="modal-kanji" id="m-kanji"></div>
     <div class="modal-meaning" id="m-meaning"></div>
     <div class="reading-section">
@@ -359,10 +439,27 @@
       <div class="examples-label">Sık Kullanılan Kelimeler</div>
       <div id="m-examples"></div>
     </div>
+    <div id="m-detay-section" style="margin-top:1.2rem;border-top:1px solid var(--border);padding-top:1rem;display:none;">
+      <div style="font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.5rem;">Radikaller</div>
+      <div id="m-detay-rad" style="font-size:0.85rem;margin-bottom:0.9rem;"></div>
+      <div style="font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.5rem;">Hikaye</div>
+      <div id="m-detay-hik" style="font-size:0.85rem;line-height:1.75;color:#3a3028;"></div>
+    </div>
+    <button id="m-detay-btn" onclick="toggleModalDetay()" style="display:none;margin-top:1rem;width:100%;padding:0.6rem;background:var(--cream);border:1px solid var(--border);border-radius:2px;font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--gold);cursor:pointer;letter-spacing:0.08em;">⊕ DETAY</button>
   </div>
 </div>
 
 <script>
+var N5_DETAY = {"日": {"radikaller": "日 (güneş)", "hikaye": "Güneşin oval şekli zamanla dikdörtgene dönüştü. Ortasındaki çizgi güneş lekesini temsil eder. Hem 'güneş' hem 'gün' anlamı taşır — çünkü bir gün = bir güneş doğuşu."}, "一": {"radikaller": "一 (bir)", "hikaye": "Tek bir yatay çizgi. Dünyanın en sade kanji'si — bir çubuk, bir anlam."}, "国": {"radikaller": "囗 (çerçeve/sınır) + 玉 (mücevher/değerli)", "hikaye": "Sınırları olan bir yer içinde değerli şeyler: halk ve toprak. Çerçevenin içindeki değer = ülke."}, "人": {"radikaller": "人 (insan)", "hikaye": "Yürüyen bir insanın yandan görünüşü. İki çizgi iki bacak gibi — biri öne, biri arkaya açılmış."}, "年": {"radikaller": "禾 (tahıl bitkisi) + 千 (bin)", "hikaye": "Tahılın bir kez hasat edilmesi = bir yıl. Hasatlar sayılarak yıllar geçer."}, "大": {"radikaller": "大 (büyük)", "hikaye": "Kollarını iki yana açmış bir insan. 'Ne kadar büyük!' dercesine kolları geren adam = büyük."}, "十": {"radikaller": "十 (on)", "hikaye": "Dikey ve yatay iki çizgi kesişir. Tüm yönleri gösteren haç = tam, tamamlanmış = on."}, "二": {"radikaller": "二 (iki)", "hikaye": "İki paralel çizgi, iki parmak gibi — biri üstte, biri altta."}, "本": {"radikaller": "木 (ağaç) + 一 (çizgi/kök işareti)", "hikaye": "Ağacın altına çizgi çekilmiş = kök. Kökten 'asıl olan', 'kaynak', 'kitap' anlamları doğmuş."}, "中": {"radikaller": "囗 (kutu) + 丨 (dikey çizgi)", "hikaye": "Bir kutunun tam ortasından geçen çizgi. Hedefi tam ortasına saplanmış bir ok gibi = orta, içi."}, "長": {"radikaller": "長 (uzun saç)", "hikaye": "Uzun saçlı yaşlı bir adamın figürü. Uzun saç = uzun yaşam = yaşlılık = uzun."}, "出": {"radikaller": "凵 (çukur) + 山 (dağ)", "hikaye": "Çukurdan dağ gibi yükselip çıkmak. Toprağın altından fışkıran bitki = çıkmak."}, "三": {"radikaller": "三 (üç)", "hikaye": "Üç paralel çizgi. Birden ikiye, ikiden üçe — artık 'çok' demek için de kullanılırdı."}, "時": {"radikaller": "日 (güneş) + 寺 (tapınak/ölçüm)", "hikaye": "Güneşin tapınakta takip edilmesi = zaman ölçümü. Eski Japonya'da saati tapınaktaki güneş saatleri tutardı."}, "行": {"radikaller": "行 (yol ayrımı)", "hikaye": "Yolun iki tarafa ayrıldığı kavşak. Adım atmak, yürümek = gitmek, eylem."}, "見": {"radikaller": "目 (göz) + 儿 (bacaklar)", "hikaye": "Üstte büyük bir göz, altında onu taşıyan bacaklar. Gözlerini dört açarak yürümek = görmek, bakmak."}, "月": {"radikaller": "月 (ay)", "hikaye": "Hilal ayın şekli. Tam daire değil, eksik — tıpkı hilal gibi. Hem 'ay' (gök cismi) hem 'ay' (takvim) anlamı taşır."}, "分": {"radikaller": "八 (ayrılmak) + 刀 (bıçak)", "hikaye": "Bıçak bir şeyi ikiye böler. Bölünen şey = parça, dakika, anlamak (bütünü parçalara ayırarak anlamak)."}, "後": {"radikaller": "彳 (adım) + 幺 (ince/küçük) + 夂 (yavaş adım)", "hikaye": "Yavaş adımlarla geri geri gitmek. Geride kalan = sonra, arkası."}, "前": {"radikaller": "止 (durmak) + 舟 (tekne) + 刀 (bıçak)", "hikaye": "Tekneyi bıçakla suya bırakmak = ilerlemek. İleri = önde = önce."}, "生": {"radikaller": "生 (bitki filizi)", "hikaye": "Toprağın içinden fışkıran filizin şekli. Topraktan yukarı doğru çıkan çizgiler = hayat, doğum, yaşamak."}, "五": {"radikaller": "五 (beş)", "hikaye": "İki yatay çizgi arasında X işareti. Beş parmak = el ortası = beş. Evrenin beş elementini (ateş, su, toprak, metal, ahşap) temsil eder."}, "間": {"radikaller": "門 (kapı) + 日 (güneş/ay)", "hikaye": "Kapı aralığından güneş ışığı süzülür. İki şey arasındaki boşluk = arasında, süre."}, "上": {"radikaller": "上 (yukarı)", "hikaye": "Bir çizginin üzerinde yükselen nokta veya çizgi. Referans noktasının üstü = yukarı, üst."}, "東": {"radikaller": "木 (ağaç) + 日 (güneş)", "hikaye": "Güneş bir ağacın arkasından doğuyor. Güneşin doğduğu yer = doğu."}, "四": {"radikaller": "囗 (kutu) + 儿 (bacaklar)", "hikaye": "Ağzı olan ve soluk alan bir figür. Dört = nefes sayısı? Aslında 'sı' sesinden Çince ödünç alınmış."}, "今": {"radikaller": "亼 (bir araya gelmek) + 一 (çizgi)", "hikaye": "Zaman çizgisinin üzerinde duran an. Geçmiş ve gelecek buluşur = şimdi, bugün."}, "金": {"radikaller": "王 (kral) + 土 (toprak) + iki nokta (parıltı)", "hikaye": "Toprağın içinde parlayan kral madeni. Topraktan çıkan değerli şey = altın, para, metal."}, "九": {"radikaller": "九 (dokuz)", "hikaye": "Kıvrılan el veya kanca şekli. Dokuz parmak = hemen hemen tam = dokuz. Japonca'da 'ku' = acı ile aynı ses, uğursuz sayılır."}, "入": {"radikaller": "入 (girmek)", "hikaye": "İki çizginin içe doğru kapandığı şekil — tıpkı bir kapıdan içeri adım atar gibi. = girmek, koymak."}, "学": {"radikaller": "爻 (çapraz/öğreti) + 宀 (çatı/ev) + 子 (çocuk)", "hikaye": "Çatı altındaki çocuk çapraz işaretlerle (hesap tahtasıyla) ders çalışıyor = öğrenmek."}, "高": {"radikaller": "高 (yüksek kule)", "hikaye": "Alt kata kapı, üst kata pencereler olan yüksek kule. Yerden yüksekte = yüksek, pahalı."}, "円": {"radikaller": "囗 (çerçeve) + 一 (çizgi)", "hikaye": "Çerçeve içine alınan değer = yuvarlak para, yen. Tam dairenin sadeleştirilmiş hali."}, "子": {"radikaller": "子 (çocuk)", "hikaye": "Kollarını sallayan küçük bir çocuğun figürü. Sargıdan çıkan bebek gibi duran şekil = çocuk, oğul."}, "外": {"radikaller": "夕 (akşam) + 卜 (kehanet/çizgi)", "hikaye": "Akşam vakti yapılan kehanet ritüeli hep dışarıda yapılırdı. Dışarıda olan = dış, yabancı."}, "八": {"radikaller": "八 (sekiz/ayrılmak)", "hikaye": "İki çizgi birbirinden ayrılıyor. Ayrılan iki parça = sekiz. Japonca'da 'ya' = bolluk, uğurlu sayı."}, "六": {"radikaller": "亠 (üst) + 八 (ayrılmak)", "hikaye": "Üstten aşağı doğru ayrılan iki dal. Altı = altı yön (yukarı, aşağı, dört yön)."}, "下": {"radikaller": "下 (aşağı)", "hikaye": "Bir çizginin altına doğru uzanan nokta veya çizgi. Referans noktasının altı = aşağı, alt."}, "気": {"radikaller": "气 (buhar/hava akımı) + 米 (pirinç)", "hikaye": "Pirinç pişerken yükselen buhar. Gözle görülmeyen ama hissedilen güç = hava, enerji, his, ruh hali."}, "小": {"radikaller": "小 (küçük)", "hikaye": "Ortada bir nokta, iki yanında iki küçük çizgi. Bir şeyi ikiye bölünce ortaya küçük parçalar çıkar = küçük."}, "花": {"radikaller": "艹 (bitki/ot) + 化 (dönüşmek)", "hikaye": "Bir bitki güzel bir şeye dönüşür — çiçek açar. Dönüşümün en güzel hali = çiçek."}, "木": {"radikaller": "木 (ağaç)", "hikaye": "Kökleri aşağıda, dalları yukarıda olan bir ağacın yandan görünüşü. Sade ama mükemmel — ortadaki gövde, iki yanda dallar."}, "山": {"radikaller": "山 (dağ)", "hikaye": "Üç tepe yan yana — ortadaki en yüksek. Dağ silüetinin soyut çizimi."}, "川": {"radikaller": "川 (nehir)", "hikaye": "Üç paralel çizgi nehrin akışını gösterir — ortadaki güçlü ana akım, yanlardaki kıyılar."}, "海": {"radikaller": "氵 (su) + 每 (her/anne)", "hikaye": "Annenin kucağı gibi her şeyi içine alan su. Sonsuz, kapsayıcı = deniz."}, "空": {"radikaller": "穴 (mağara/delik) + 工 (iş/oyma)", "hikaye": "Oyulmuş boşluk — mağaranın içi gibi. Boş olan büyük alan = gökyüzü, boşluk."}, "土": {"radikaller": "土 (toprak)", "hikaye": "Yatay çizgi toprak yüzeyi, dikey çizgi toprağın içinde büyüyen bitki. Köklerin tutunduğu yer = toprak."}, "石": {"radikaller": "厂 (uçurum) + 口 (ağız/kare)", "hikaye": "Uçurumdan düşen kaya parçası. Yüksekten düşen sert şey = taş."}, "火": {"radikaller": "火 (ateş)", "hikaye": "Altta ana alev, iki yanda kıvılcımlar fırlıyor. Yanan ateşin üstten görünüşü gibi."}, "水": {"radikaller": "水 (su)", "hikaye": "Ortada ana akım, iki yanda dalgalar. Akarken çatlayıp yayılan suyun görünüşü."}, "雨": {"radikaller": "一 (çizgi/gökyüzü) + 冂 (çerçeve/bulut) + 丶丶丶丶 (yağmur damlaları)", "hikaye": "Çerçeveli bulutun altından düşen dört damla. Gökyüzündeki buluttan dökülen yağmur = yağmur."}, "夜": {"radikaller": "亠 (üst) + 夕 (akşam) + 亦 (aynı zamanda)", "hikaye": "Akşamın da ötesi, karanlığın çöktüğü zaman. Güneş tamamen battıktan sonra = gece."}, "朝": {"radikaller": "倝 (güneş doğuşu) + 月 (ay)", "hikaye": "Güneş doğarken ay hâlâ görünüyor. İkisinin aynı anda gökyüzünde olduğu kısa an = sabah."}, "昼": {"radikaller": "尺 (cetvel/ölçü) + 日 (güneş)", "hikaye": "Güneşin tam tepede olduğu, gölgenin en kısa olduğu an. Ölçülebilir en kısa gölge = öğle."}, "色": {"radikaller": "人 (insan) + 巴 (kıvrım/renk tonu)", "hikaye": "İnsanın yüz ifadesi renk gibidir — duyguları yansıtır. Yüz rengi = renk, görünüş."}, "駅": {"radikaller": "馬 (at) + 尺 (mesafe ölçüsü)", "hikaye": "Belirli mesafelerde atların değiştirildiği yer. Eskiden atlı postacılar burada at değiştirirdi = istasyon."}, "車": {"radikaller": "車 (tekerlek)", "hikaye": "Üstten bakınca iki tekerlekli araç şekli. Dönen = araba, araç."}, "食": {"radikaller": "亼 (kapak/bir araya gelme) + 良 (iyi/yeterli)", "hikaye": "İyi şeylerin bir araya geldiği yer: tabak ve üzerindeki yiyecek. Karşılıklı oturarak iyi şeyler paylaşmak = yemek."}, "飲": {"radikaller": "食 (yemek) + 欠 (esnemek/ağız açmak)", "hikaye": "Ağzını açarak yiyecek almak — ama sıvı için. Ağzı açık, içmeye hazır = içmek."}, "読": {"radikaller": "言 (söz) + 売 (satmak)", "hikaye": "Sözleri zihinsel dolaşıma sokmak = okumak."}, "書": {"radikaller": "聿 (kalem) + 者 (şey/kişi)", "hikaye": "Kalemin kağıtta bıraktığı iz. Yazılı olan her şey = yazmak, kitap."}, "聞": {"radikaller": "門 (kapı) + 耳 (kulak)", "hikaye": "Kapıdan kulak verip dinlemek = duymak, sormak."}, "話": {"radikaller": "言 (söz) + 舌 (dil/tongue)", "hikaye": "Dil ve sözlerin bir araya gelmesi. Dil = konuşma organı, söz = içerik. İkisi birlikte = konuşmak."}, "買": {"radikaller": "罒 (ağ) + 貝 (para)", "hikaye": "Para ağına yakalanmak = satın almak."}, "売": {"radikaller": "士 + 罒 + 貝", "hikaye": "Para ağını kurmak. Müşteriyi çekip para almak = satmak."}, "使": {"radikaller": "亻 (insan) + 吏 (memur)", "hikaye": "Görevlendirilen insan. Amacına uygun kullanmak = kullanmak."}, "作": {"radikaller": "亻 (insan) + 乍 (aniden)", "hikaye": "İnsan aniden bir şey ortaya koyuyor. Hızlı yaratma = yapmak."}, "教": {"radikaller": "爻 (öğreti) + 子 (çocuk) + 攴 (yönlendirmek)", "hikaye": "Eline değnekle çocuğa semboller öğreten. Yönlendirerek aktarmak = öğretmek."}, "休": {"radikaller": "亻 (insan) + 木 (ağaç)", "hikaye": "Ağacın gölgesinde oturan insan. Doğanın gölgesinde soluk almak = dinlenmek."}, "切": {"radikaller": "七 (yedi/kesmek) + 刀 (bıçak)", "hikaye": "Bıçakla tam ortasından geçmek = kesmek, önemli."}, "帰": {"radikaller": "追 + 帚 (süpürge)", "hikaye": "Süpürgeyle temizlenen yere dönmek. Beklenilen yere geri gelmek = dönmek."}, "来": {"radikaller": "来 (buğday başağı)", "hikaye": "Tohumun uzaktan gelerek toprakta başak vermesi. Uzaktan yaklaşan = gelmek."}, "毎": {"radikaller": "母 (anne) olmadan başlık kısmı", "hikaye": "Her gün anneyi görmek gibi — tekrarlanan, değişmeyen bir şey. Düzenli tekrar = her."}, "会": {"radikaller": "亼 (bir araya gelme) + 曰 (söz)", "hikaye": "Bir araya gelip konuşmak = toplantı, karşılaşmak."}, "思": {"radikaller": "田 (tarla/beyin) + 心 (kalp)", "hikaye": "Kalp ve beyin birlikte çalışıyor. Hem duygusal hem akılsal düşünce = düşünmek."}, "同": {"radikaller": "冂 (çerçeve) + 口 (ağız) + 一 (çizgi)", "hikaye": "Aynı kutunun içinde aynı şeyi söyleyen ağızlar. Birlikte ses çıkarmak = aynı, birlikte."}, "事": {"radikaller": "亅 (kanca) + 口 + 彐 (el)", "hikaye": "Elde tutulup ağızla anlatılan şey. Söz konusu edilen = konu, iş, olay."}, "自": {"radikaller": "自 (burun)", "hikaye": "Burun şekli — eski Japonlar kendini gösterirken burnunu işaret ederdi. Ben = kendi, kendisi."}, "社": {"radikaller": "示 (ilahi gösterge/tapınak) + 土 (toprak)", "hikaye": "Toprak tanrısına sunulan yer. Toprak tanrısı tapınağı → topluluk yeri → şirket."}, "発": {"radikaller": "癶 (iki ayak açık) + 弓 (yay) + 殳 (atmak)", "hikaye": "İki ayak açık, yay gerilmiş, oku fırlatıyor. Bir şeyi dışarı doğru göndermek = yayınlamak, başlamak."}, "者": {"radikaller": "耂 (yaşlı) + 日 (güneş/gün)", "hikaye": "Her gün bir şeyle ilgilenen yaşlı biri. Sürekli bir şeyle uğraşan = kişi, uzman."}, "地": {"radikaller": "土 (toprak) + 也 (aynı zamanda)", "hikaye": "Toprağın uzandığı yer. Var olan, ayak basılan zemin = arazi, yer."}, "業": {"radikaller": "业 (çalgı tablası) + 木 (ağaç)", "hikaye": "Ağaçtan yapılmış müzik aletini asma tahtası. Özenle yapılan iş, meslek = endüstri, iş."}, "方": {"radikaller": "方 (kürek/sancak direği)", "hikaye": "İki yöne açılmış kürek sapı ya da sancak. Bir yöne göstermek = yön, yöntem, kişi (saygılı)."}, "新": {"radikaller": "亲 (ağaç kesmek) + 斤 (balta)", "hikaye": "Balta ile yeni kesilmiş ağaç. Taze, henüz kesilmiş = yeni."}, "場": {"radikaller": "土 (toprak) + 昜 (güneş yükselen)", "hikaye": "Güneşin aydınlattığı açık toprak alan. Herkesin görebildiği yer = mekan, saha."}, "員": {"radikaller": "口 + 貝 (para)", "hikaye": "Para üzerindeki yüz gibi grubun simgesi = üye."}, "立": {"radikaller": "立 (ayakta duran insan)", "hikaye": "Yerde duran insanın yandan görünüşü — ayakları yerde, başı havada. Dik durmak = ayakta durmak, kurmak."}, "開": {"radikaller": "門 (kapı) + 开 (iki el açıyor)", "hikaye": "İki elinizle kapı kanatlarını iki yana itiyorsunuz. Kapıyı iki yana açmak = açmak."}, "手": {"radikaller": "手 (el)", "hikaye": "Beş parmak ve bir bilek — elin soyut çizimi. En çok kullanılan organ = el."}, "力": {"radikaller": "力 (kas/kol)", "hikaye": "Bükülen kolun kasını gösteren şekil. Gerilen kas = güç, kuvvet."}, "問": {"radikaller": "門 (kapı) + 口 (ağız)", "hikaye": "Kapının önünde ağzıyla soru soran biri. Kapıyı çalıp sormak = sormak, sorun."}, "代": {"radikaller": "亻 (insan) + 弋 (değiştirmek)", "hikaye": "Birinin yerine geçen insan. Bir öncekinin yerini alan = dönem, nesil, değişim."}, "明": {"radikaller": "日 (güneş) + 月 (ay)", "hikaye": "Güneş ve ay aynı anda — ikisi birden aydınlatıyor. En fazla ışık = aydınlık, açık, parlak."}, "動": {"radikaller": "重 (ağır) + 力 (güç)", "hikaye": "Ağır bir şeyi hareket ettirmek için güç lazım. Güçle ağırlığı yenmek = hareket etmek."}, "目": {"radikaller": "目 (göz)", "hikaye": "İnsan gözünün yandan görünüşü — oval şekil içinde göz bebeği. Dikey çevrilmiş göz = göz."}, "通": {"radikaller": "辶 (yürümek) + 甬 (boru)", "hikaye": "Borudan geçip giden su gibi. Engelsiz ilerleme = geçmek, yaygın."}, "言": {"radikaller": "言 (dil + titreşimler)", "hikaye": "Dilden çıkan ses dalgaları = söylemek, dil, kelime."}, "理": {"radikaller": "王 (kral/jade) + 里 (köy)", "hikaye": "Köydeki değerli taşları düzenlemek. Her şeyin doğal düzeni = mantık, neden, yönetmek."}, "体": {"radikaller": "亻 (insan) + 本 (kök/asıl)", "hikaye": "İnsanın asıl özü, kökü. Varlığın temel yapısı = vücut, beden."}, "田": {"radikaller": "田 (tarla)", "hikaye": "Sulama kanallarıyla bölünmüş pirinç tarlasının üstten görünüşü. Düzenli bölünmüş toprak = tarla."}, "主": {"radikaller": "王 (kral) + 丶 (nokta/alev)", "hikaye": "Lambadan yükselen alev. Etrafı aydınlatan = baş, sahip, asıl olan."}, "数": {"radikaller": "婁 (yığmak) + 攴 (vurmak/saymak)", "hikaye": "Şeyleri yığıp tek tek sayma hareketi. Saymak için dokunmak = sayı, saymak."}, "次": {"radikaller": "冫 (buz/ikinci) + 欠 (esnemek/eksik)", "hikaye": "Henüz tam olmayan, sıradaki. Bir adım geride olan = sonraki, sıradaki."}, "文": {"radikaller": "文 (dövme/süsleme)", "hikaye": "İnsan vücuduna çizilen dövme işareti. Anlamlı iz bırakmak = yazı, kültür, metin."}, "特": {"radikaller": "牛 (inek) + 寺 (tapınak/ölçüm)", "hikaye": "Tapınakta ölçülen özel inek — kurban için seçilmiş. Özenle seçilen = özel, karakteristik."}, "女": {"radikaller": "女 (kadın)", "hikaye": "Diz kırarak oturan ya da el sallayan kadın figürü. Zarif oturuş pozu = kadın."}, "正": {"radikaller": "一 (çizgi/hedef) + 止 (durmak/ayak)", "hikaye": "Hedef çizgisine doğru adım atmak. Doğru yöne yürümek = doğru, düzeltmek."}, "安": {"radikaller": "宀 (çatı/ev) + 女 (kadın)", "hikaye": "Ev içinde huzurla oturan kadın. Çatı altında güvende olmak = güvenli, ucuz, huzurlu."}, "近": {"radikaller": "辶 (yürümek) + 斤 (balta)", "hikaye": "Balta mesafesinde yürüyüş. Bir adım atınca ulaşılan = yakın."}, "強": {"radikaller": "弘 (güçlü yay) + 虫 (böcek)", "hikaye": "Böcek gibi küçük ama yay gibi güçlü. Beklenmedik güç = güçlü, zorlamak."}, "公": {"radikaller": "八 (bölmek) + 厶 (özel)", "hikaye": "Özel olanı herkese bölüştürmek = kamu, resmi."}, "持": {"radikaller": "扌 (el) + 寺 (ölçmek)", "hikaye": "Saatlerce elde tutmak. Sürekli kavramak = tutmak, sahip olmak."}, "関": {"radikaller": "門 (kapı) + 幺幺 (bağ)", "hikaye": "Kapıyı bağlayan kilit mekanizması. İki şeyi birbirine bağlayan = ilgili, bağlantı."}, "市": {"radikaller": "亠 (üst) + 巾 (bez)", "hikaye": "Satıcıların bezlerini astığı yer. Bezlerin dalgalandığı pazar = şehir, pazar."}, "将": {"radikaller": "爿 (tahta yatak) + 肉 (et) + 寸 (el)", "hikaye": "Etle beslenmiş güçlü el — orduyu besleyen ve yöneten. Önde giden = general, gelecek."}, "以": {"radikaller": "人 (insan) + 巳 (sıra)", "hikaye": "İnsanların sıralandığı nokta. Oradan itibaren = göre, -den itibaren."}, "結": {"radikaller": "糸 (iplik) + 吉 (şans)", "hikaye": "Şans ipliğini düğümlemek — evlilik bağı gibi. Düğümlemek = sonuçlanmak, evlenmek."}, "活": {"radikaller": "氵 (su) + 舌 (dil)", "hikaye": "Dil ıslak olduğunda ses çıkar. Ses = hayat belirtisi = canlı, aktif."}, "表": {"radikaller": "衣 (giysi) + 毛 (kıl)", "hikaye": "Giysinin kürklü dış yüzü. Görünen taraf = tablo, yüzey, göstermek."}, "全": {"radikaller": "入 (girmek) + 王 (jade)", "hikaye": "Değerli taşın hiçbir kırığı olmayan hali. Kusursuz bütün = tümü, tam."}, "制": {"radikaller": "制 (bıçakla şekil vermek)", "hikaye": "Ham maddeyi bıçakla işleyip biçimlendirmek. Kural koymak = sistem, düzenlemek."}, "機": {"radikaller": "木 (ağaç) + 幾 (az kaldı)", "hikaye": "Az kaldı denen anda çalışan ağaç tezgah. Kritik an = makine, fırsat."}, "区": {"radikaller": "匚 (kutu) + 品 (ürünler)", "hikaye": "Ürünleri kutulara ayırmak = bölge, ayrım."}, "情": {"radikaller": "忄 (kalp) + 青 (temiz)", "hikaye": "Temiz bir kalp = saf duygu. Filtrelenmemiş his = duygu, bilgi, durum."}, "報": {"radikaller": "幸 + 又 + 卩", "hikaye": "Şanslı haberi mühürleyip teslim etmek. Resmi bildirim = haber, ödül, rapor."}, "住": {"radikaller": "亻 (insan) + 主 (asıl)", "hikaye": "İnsanın asıl yeri, kökü. Temel konum = yaşamak, ikamet."}, "平": {"radikaller": "干 (terazi) + 八 (iki yana)", "hikaye": "Terazinin iki kefesinin dengesi. Eşit ağırlık = düz, barış."}, "記": {"radikaller": "言 (söz) + 己 (ben)", "hikaye": "Kendi sözlerimi kaydetmek. Kişisel iz bırakmak = kayıt, hatırlamak."}, "当": {"radikaller": "当 (tam isabet)", "hikaye": "Ok tam hedefe saplanıyor. Kesin isabet = uygun, o, o zaman."}, "男": {"radikaller": "田 (tarla) + 力 (güç)", "hikaye": "Tarlada çalışan güçlü kişi = erkek."}, "都": {"radikaller": "者 (kişi) + 阝 (bölge)", "hikaye": "Herkesin toplandığı bölge = başkent, hepsi."}, "連": {"radikaller": "辶 (yürümek) + 車 (araba)", "hikaye": "Arabalar konvoy halinde gidiyor. Art arda gelen = bağlı, sürekli."}, "対": {"radikaller": "业 (tabak) + 寸 (ölçü eli)", "hikaye": "İki tabağı karşılıklı tutan el. Yüz yüze koymak = karşı, çift."}, "部": {"radikaller": "咅 (sessiz) + 阝 (bölge)", "hikaye": "Sessizce ayrılmış kendi bölgesi. Özerk alan = bölüm."}, "合": {"radikaller": "亼 (kapak) + 口 (kap)", "hikaye": "Kapağın kaba oturması. Tam uyum = birleşmek, uygun."}, "産": {"radikaller": "文 + 亻 + 生", "hikaye": "İnsanın yeni bir şey ortaya koyması = üretmek, doğurmak."}, "変": {"radikaller": "亦 + 攴 (değiştirmek)", "hikaye": "Vurarak dönüştürmek = değişmek, garip."}, "完": {"radikaller": "宀 (çatı) + 元 (kaynak)", "hikaye": "Köküne kadar tamamlamak = bitmek, mükemmel."}, "式": {"radikaller": "工 (araç) + 弋 (atış)", "hikaye": "Standart yöntemi uygulamak = biçim, tören."}, "家": {"radikaller": "宀 (çatı) + 豕 (domuz)", "hikaye": "Çatı altında domuz = eski köy evi. Ev, aile."}, "実": {"radikaller": "宀 (çatı) + 貫 (doldurmak)", "hikaye": "İçi dolu ev. Gerçekten var olan = gerçek, meyve."}, "感": {"radikaller": "咸 (hepsi) + 心 (kalp)", "hikaye": "Kalbin tümünü etkileyen şey = hissetmek."}, "意": {"radikaller": "音 (ses) + 心 (kalp)", "hikaye": "Kalbin sesi = niyet, anlam."}, "仕": {"radikaller": "亻 (insan) + 士 (uzman)", "hikaye": "Ustaya hizmet = iş yapmak."}, "重": {"radikaller": "千 (bin) + 里 (mesafe)", "hikaye": "Bin köy mesafesi basınç = ağır, katman."}, "役": {"radikaller": "彳 (adım) + 殳 (sopa)", "hikaye": "Sopalı görevli asker = rol, hizmet."}, "決": {"radikaller": "氵 (su) + 夬 (ayırmak)", "hikaye": "Barajı yaran su gibi geri dönüşsüz eylem = karar vermek."}, "流": {"radikaller": "氵 (su) + 㐬 (yüzen bebek)", "hikaye": "Suya bırakılmış bebek gibi akıp gitmek = akmak, akım."}, "用": {"radikaller": "用 (çit/uygulama)", "hikaye": "Her parçanın görevini yapması = kullanmak, amaç."}, "準": {"radikaller": "氵 (su) + 隹 (kuş) + 十", "hikaye": "Su üstünde denge bulan kuş = standart, hazır."}, "共": {"radikaller": "廾 (iki el) + nesne", "hikaye": "Birlikte tutmak = ortak, birlikte."}, "欧": {"radikaller": "区 + 欠", "hikaye": "Batıdan gelen nefes = Avrupa."}, "担": {"radikaller": "扌 (el) + 旦 (sabah)", "hikaye": "Her sabah omuzlanan yük = sorumluluk."}, "係": {"radikaller": "亻 + 系 (ip)", "hikaye": "İplerle bağlı insanlar = ilişki, görevli."}, "名": {"radikaller": "夕 (akşam) + 口 (ağız)", "hikaye": "Karanlıkta isimle çağırmak = isim, ünlü."}, "勝": {"radikaller": "朕 + 力", "hikaye": "Güçlünün belli olduğu an = kazanmak."}, "政": {"radikaller": "正 (doğru) + 攴 (yönlendirmek)", "hikaye": "Doğru yönde yönlendirmek. İnsanları doğru yola sevk etmek = siyaset, yönetim."}, "経": {"radikaller": "糸 (iplik) + 巠 (düz çizgi)", "hikaye": "Dokumada yatay iplikleri tutan dikey iplik. Temeli sağlayan = geçmek, yönetmek, ekonomi."}, "現": {"radikaller": "王 (jade) + 見 (görmek)", "hikaye": "Değerli taşın parıldayıp görünmesi. Gizlinin açığa çıkması = şimdiki, görünmek."}, "民": {"radikaller": "民 (göze iğne)", "hikaye": "Eski dönemde kölelerin bir gözüne iğne vurulurdu. Boyun eğdirilen kalabalık = halk."}, "度": {"radikaller": "广 (geniş çatı) + 庶 (pek çok)", "hikaye": "Geniş bir çatı altında pek çok kez ölçmek. Tekrarlanan ölçüm = derece, kez."}, "第": {"radikaller": "竹 (bambu) + 弟 (küçük kardeş)", "hikaye": "Bambu çubuklarla sayılan kardeşler sırası. Küçükten büyüğe sıra = sıra numarası."}, "内": {"radikaller": "冂 (çerçeve) + 入 (girmek)", "hikaye": "Çerçevenin içine girmek. İçerideki = iç, dahili."}, "考": {"radikaller": "耂 (yaşlı) + 丂 (bükülmek)", "hikaye": "Yaşlı adamın öne eğilip düşünmesi. Derin düşünce = düşünmek."}, "点": {"radikaller": "占 (kehanet) + 灬 (ateş)", "hikaye": "Ateşle kehanet yapılırken bırakılan iz. Belirleyici an = nokta, puan."}, "化": {"radikaller": "亻 (insan) + 匕 (baş aşağı insan)", "hikaye": "Ayaktaki insan ve baş aşağı insan. Tam tersi = dönüşmek."}, "所": {"radikaller": "户 (kapı) + 斤 (balta)", "hikaye": "Kapı yanında duran balta. Belirli bir noktada duran = yer."}, "起": {"radikaller": "走 (koşmak) + 己 (kendisi)", "hikaye": "Kendi başına koşmaya başlamak. Harekete geçmek = kalkmak, başlamak."}, "求": {"radikaller": "球 (küre) = su + toprak arayan", "hikaye": "Hayatta kalmak için su ve toprak arayışı. Ihtiyaçtan gelen istek = aramak, istemek."}, "個": {"radikaller": "亻 (insan) + 固 (sağlam)", "hikaye": "Kendi başına sağlam duran insan. Ayrı, bağımsız birim = birey, adet sayacı."}, "果": {"radikaller": "木 (ağaç) + 田 (tarla)", "hikaye": "Ağacın üzerinde olgunlaşan yuvarlak nesne. Sonunda gelen = meyve, sonuç."}, "相": {"radikaller": "木 (ağaç) + 目 (göz)", "hikaye": "Ağacın üstüne çıkıp uzağa bakmak. Karşılıklı bakmak = karşılıklı, görünüş."}, "組": {"radikaller": "糸 (iplik) + 且 (katman)", "hikaye": "İplikler katman katman örülüyor. Parçaların bir araya gelmesi = grup, örmek."}, "支": {"radikaller": "十 (on) + 又 (el)", "hikaye": "El birini daldan tutuyor. Düşmesini engelleyen = desteklemek, dal."}, "論": {"radikaller": "言 (söz) + 侖 (düzen)", "hikaye": "Düzenli sözler. Mantıklı argüman zinciri = tartışmak, teori."}, "拡": {"radikaller": "扌 (el) + 広 (geniş)", "hikaye": "Elinizi iki yana açmak gibi. Genişletmek = yaymak, büyütmek."}, "技": {"radikaller": "扌 (el) + 支 (dal)", "hikaye": "Elin hassas hareketleri. Dallanıp budaklanan beceri = teknik, beceri."}, "医": {"radikaller": "匸 (saklama) + 矢 (ok) + 殳 (çalkalamak)", "hikaye": "İçine ok saplanmış ve ilacı sallanan kutu = hekim, tıp."}, "受": {"radikaller": "爫 (yukarı el) + 舟 (tekne) + 又 (aşağı el)", "hikaye": "Teknedeki yükü bir elden öbür ele almak = almak, kabul."}, "確": {"radikaller": "石 (taş) + 隺 (yükselen kuş)", "hikaye": "Taşın sağlamlığı gibi kesin. Şüphe yok = kesin, doğrulamak."}, "提": {"radikaller": "扌 (el) + 是 (bu/doğru)", "hikaye": "Doğru şeyi elle öne çıkarmak = sunmak, teklif."}, "比": {"radikaller": "比 (iki kişi yan yana)", "hikaye": "İki kişi ya aynı yöne bakıyor ya da biri diğerini geçiyor. Yanyana koymak = karşılaştırmak."}, "価": {"radikaller": "亻 (insan) + 賈 (tüccar)", "hikaye": "Tüccarın koyduğu rakam. İnsan tarafından belirlenen = fiyat, değer."}, "増": {"radikaller": "土 (toprak) + 曽 (katmanlar)", "hikaye": "Toprak katman katman birikir. Giderek çoğalmak = artmak."}, "著": {"radikaller": "艹 (bitki) + 者 (kişi)", "hikaye": "Bitkinin toprağın üstüne çıkması gibi belirginleşen kişi = yazar, belirgin."}, "基": {"radikaller": "其 (sepet/platform) + 土 (toprak)", "hikaye": "Toprağa sağlam oturtulan platform. Her şeyin üstüne kurulduğu = temel."}, "保": {"radikaller": "亻 (insan) + 呆 (aptal/saf)", "hikaye": "Saf olanı koruyan kişi. Güvencede tutmak = korumak, sürdürmek."}, "税": {"radikaller": "禾 (tahıl) + 兑 (değiştirmek)", "hikaye": "Hasatın bir kısmını devletle değiştirmek. Zorunlu pay = vergi."}, "際": {"radikaller": "阝 (tepe/bölge) + 祭 (festival)", "hikaye": "Festivaller sınır bölgelerinde yapılırdı. Sınır anı = kenar, durum, sırasında."}, "格": {"radikaller": "木 (ağaç) + 各 (her biri)", "hikaye": "Her ağaç dalının kendi konumu. Yerli yerinde olmak = statü, kural."}, "属": {"radikaller": "尾 (kuyruk) + 虫 (böcek)", "hikaye": "Böceğin kuyruğunu takip etmesi. Peşinden gitmek = ait olmak."}, "幸": {"radikaller": "幸 (el kelepçesi)", "hikaye": "Eski dönemde el kelepçesinden kurtulmak büyük şans sayılırdı. Kötüden kaçmak = mutluluk, şans."}, "断": {"radikaller": "斤 (balta) + 继 (iplik)", "hikaye": "Balta ile ipliği kesmek. Bağı koparmak = kesmek, reddetmek."}, "案": {"radikaller": "安 (güvenli) + 木 (ağaç/masa)", "hikaye": "Masanın güvenli düzlüğünde çizilen plan. Sakin ortamda yapılan = plan, öneri."}, "向": {"radikaller": "宀 (çatı) + 口 (ağız/pencere)", "hikaye": "Çatının tepesindeki kuzey penceresi. Pencere yönü = yönelmek."}, "環": {"radikaller": "王 (jade) + 睘 (gözler açık)", "hikaye": "Gözler açık şekilde çevresini izleyen jade yüzük. Halka = çevre, döngü."}, "境": {"radikaller": "土 (toprak) + 竟 (sonunda)", "hikaye": "Toprağın bittiği yer. Sonun sınırı = sınır, ortam."}, "師": {"radikaller": "帀 (tur) + 師 (askeri birlik)", "hikaye": "Etrafını dolaşarak öğreten. Bilgiyi aktaran = usta, öğretmen."}, "要": {"radikaller": "西 (batı/kadın beli) + 女 (kadın)", "hikaye": "Kadının beli — vücudun merkezi. Merkezde olan = gerekli, istemek."}, "超": {"radikaller": "走 (koşmak) + 召 (çağırmak)", "hikaye": "Çağrıldığın yeri koşarak geçmek. Sınırı aşmak = geçmek, süper."}, "験": {"radikaller": "馬 (at) + 佥 (tüm birlikte)", "hikaye": "Atların birlikte koşturulup test edilmesi. Beceriyi sınamak = deneyim, sınav."}, "困": {"radikaller": "囗 (çerçeve) + 木 (ağaç)", "hikaye": "Etrafı çevrili bahçede hapsolmuş ağaç. Sıkışıp kalmak = zorluk, sıkıntı."}, "敗": {"radikaller": "贝 (para) + 攴 (vurmak)", "hikaye": "Parasını dağıtmak. Mülkünü kaybetmek = yenilmek, başarısız."}, "功": {"radikaller": "工 (iş) + 力 (güç)", "hikaye": "Güçle iş yapmak. Emek karşılığı kazanım = başarı, erdem."}, "効": {"radikaller": "交 (çapraz) + 力 (güç)", "hikaye": "Güç çaprazlanıp hedefine ulaşıyor. Sonuç veren güç = etkili, verim."}, "益": {"radikaller": "水 (su) + 皿 (tabak)", "hikaye": "Tabaktan taşan su — bolluğun simgesi. Dolup taşmak = fayda, kâr."}, "危": {"radikaller": "厂 (uçurum) + 人 (insan) + 卩 (diz çökme)", "hikaye": "Uçurum kenarında diz çökmüş insan. Dengesiz durum = tehlike."}, "率": {"radikaller": "玄 (ip) + 十 (on) + 糸 (iplik)", "hikaye": "İplerin birbirine oranı. Hesaplanan ilişki = oran, liderlik."}, "収": {"radikaller": "丩 (bükülmek) + 又 (el)", "hikaye": "Elinizi bükerek toplamak. Ellerinizle içeri çekmek = toplamak, gelir."}, "減": {"radikaller": "氵 (su) + 咸 (tümü azalmak)", "hikaye": "Suyun çekilmesi. Giderek azalmak = azalmak."}, "供": {"radikaller": "亻 (insan) + 共 (birlikte)", "hikaye": "Birlikte olan insanlar. Birlikte sunmak = sağlamak, çocuk."}, "認": {"radikaller": "言 (söz) + 忍 (katlanmak)", "hikaye": "Sabırla dinleyip onaylamak. Söze katlanmak = tanımak, onaylamak."}, "設": {"radikaller": "言 (söz) + 殳 (yazmak/kurmak)", "hikaye": "Sözle temel atmak. Planı dile getirip uygulamak = kurmak, tesis."}, "解": {"radikaller": "角 (boynuz) + 刀 (bıçak) + 牛 (inek)", "hikaye": "İneği boynuzlarından tutup bıçakla kesmek. Parçalara ayırmak = çözmek, anlamak."}, "選": {"radikaller": "辶 (yürümek) + 巽 (eleme)", "hikaye": "Yürürken en iyisini ayırt etmek. Ayrıştırarak seçmek = seçmek."}, "課": {"radikaller": "言 (söz) + 果 (meyve)", "hikaye": "Sonucu olan söz. Meyvesi olan görev = ödev, bölüm."}, "責": {"radikaller": "朿 (diken) + 貝 (para)", "hikaye": "Dikenli borç. Sizi zorlayan yükümlülük = sorumluluk."}, "努": {"radikaller": "奴 (köle) + 力 (güç)", "hikaye": "Köle gibi güçle çalışmak. Yorulmadan emek vermek = çabalamak."}, "評": {"radikaller": "言 (söz) + 平 (düz/dengeli)", "hikaye": "Dengeli söz. Tarafsız yorum = değerlendirmek, eleştirmek."}, "望": {"radikaller": "亡 (kayıp) + 月 (ay) + 王 (kral)", "hikaye": "Kaybolana bakarak yükselen kral gibi ay. Uzağa bakarak arzu etmek = ümit, arzulamak."}, "測": {"radikaller": "氵 (su) + 則 (kural)", "hikaye": "Suyun kuralına göre ölçülmesi. Su seviyesini kural ile belirlemek = ölçmek."}, "費": {"radikaller": "弗 (bağlamak) + 貝 (para)", "hikaye": "Bağlı olan para. Kullanılmak zorunda olan = harcamak, masraf."}, "権": {"radikaller": "木 (ağaç) + 雚 (yüksek uçan kuş)", "hikaye": "Yüksek uçan kuş gibi ağacın tepesindeki güç. En üstteki ayrıcalık = hak, güç."}, "済": {"radikaller": "氵 (su) + 斉 (düzenli)", "hikaye": "Suyun düzenli akışı. Akıp gitmek, bitmek = kurtarmak, tamamlamak."}, "輸": {"radikaller": "車 (araba) + 俞 (tekne)", "hikaye": "Tekne ve araba ile taşımak. Her türlü araçla aktarmak = taşımak, ihracat."}, "導": {"radikaller": "道 (yol) + 寸 (el)", "hikaye": "Elin yolu göstermesi. Önden yürüyerek yol açmak = yönlendirmek."}, "展": {"radikaller": "尸 (vücut) + 衣 (giysi)", "hikaye": "Giysiyi vücuttan ayırıp açmak. Katlanmış olanı açmak = açmak, sergi."}, "協": {"radikaller": "十 (on) + 劦 (üç güç)", "hikaye": "Üç güç birden on oluyor. Birleşince artan güç = işbirliği."}, "覚": {"radikaller": "爫 (el) + 学 (öğrenmek) + 見 (görmek)", "hikaye": "Öğrendiğini gözlerle fark etmek. Uyku ile uyanıklık arasındaki geçiş = hatırlamak, uyanmak."}, "勢": {"radikaller": "埶 (fide dikmek) + 力 (güç)", "hikaye": "Fidanın büyüme gücü. Durdurulamayan doğal güç = güç, eğilim."}, "額": {"radikaller": "客 (misafir) + 頁 (baş)", "hikaye": "Misafirin başındaki alın. Yüzün en geniş yüzeyi = alın, miktar."}, "援": {"radikaller": "扌 (el) + 爰 (çekmek)", "hikaye": "Çukurdan birini eliyle çekmek. Yukarı çekmek = yardım, destek."}, "宅": {"radikaller": "宀 (çatı) + 乇 (bağlanmak)", "hikaye": "Toprağa bağlı çatı. Sabit olan konut = ev, ikamet."}, "割": {"radikaller": "害 (zarar) + 刀 (bıçak)", "hikaye": "Bıçakla zararlı olanı kesmek. Parçalara bölmek = kesmek, oran."}, "宣": {"radikaller": "宀 (çatı) + 亘 (yatay uzanan)", "hikaye": "Çatının altından her tarafa yayılan ses. Geniş alana duyurmak = ilan etmek."}, "推": {"radikaller": "扌 (el) + 隹 (kuş)", "hikaye": "Kuşu yuvadan itmek gibi. İleri doğru itmek = tahmin, itmek."}, "採": {"radikaller": "扌 (el) + 采 (toplama)", "hikaye": "Elle seçerek toplamak = almak, seçmek."}, "構": {"radikaller": "木 (ağaç) + 冓 (çerçeve)", "hikaye": "Ağaç direklerin oluşturduğu çerçeve. İskelet yapısı = yapı, çerçeve."}, "置": {"radikaller": "罒 (ağ) + 直 (düz)", "hikaye": "Düz bir yere ağ sermek. Belirlenen yere bırakmak = koymak, yerleştirmek."}, "接": {"radikaller": "扌 (el) + 妾 (cariye)", "hikaye": "Elde tutarak yanına almak. Dokunarak bağlamak = bağlamak, temas."}, "念": {"radikaller": "今 (şimdi) + 心 (kalp)", "hikaye": "Şu an kalpte olan şey. Zihinse yerleşik olan = düşünce, dilek."}, "否": {"radikaller": "不 (hayır) + 口 (ağız)", "hikaye": "Ağızdan çıkan hayır. Kesinlikle reddetmek = hayır, reddetmek."}, "追": {"radikaller": "辶 (yürümek) + 追 (domuz kuyruğu)", "hikaye": "Domuzun kuyruğunu takip etmek. Arkadan koşmak = kovalamak, takip."}, "争": {"radikaller": "爫 (el) + 亍 (çekişmek)", "hikaye": "İki el aynı şeyi çekiştiriyor. Aynı şeyi iki taraf istiyor = çatışmak, rekabet."}, "存": {"radikaller": "才 (yetenek/varlık) + 子 (çocuk)", "hikaye": "Yetenekli çocuk gibi varlığını sürdürmek. Kaybolmadan kalmak = var olmak."}, "局": {"radikaller": "尸 (vücut) + 句 (cümle)", "hikaye": "Belirli bir çerçevede tamamlanan cümle. Kapalı alan = büro, durum."}, "独": {"radikaller": "犭 (köpek) + 蜀 (tırtıl)", "hikaye": "Köpeğin peşinden gitmeyen tırtıl. Kendi başına giden = yalnız, bağımsız."}, "演": {"radikaller": "氵 (su) + 寅 (tiger/güçlü)", "hikaye": "Güçlü suyun akması gibi. Doğal güçle ifade etmek = oynamak, performans."}, "優": {"radikaller": "亻 (insan) + 憂 (üzüntü)", "hikaye": "Üzüntüsünü saklayan zarif insan. Acıyı zarafetle taşımak = üstün, nazik."}, "検": {"radikaller": "木 (ağaç) + 佥 (tümünü görmek)", "hikaye": "Ağacı köküne kadar incelemek. Her yeri kontrol etmek = incelemek, kontrol."}, "歴": {"radikaller": "厂 (uçurum) + 秝 (iki tahıl) + 止 (adım)", "hikaye": "Tahıl hasatları sayılarak geçen yıllar. Ardı ardına gelen adımlar = tarih, geçmiş."}, "様": {"radikaller": "木 (ağaç) + 羊 (koyun) + 水 (su)", "hikaye": "Koyun postunun suya yansıması gibi görüntü. Şekil ve görünüş = biçim, saygı eki."}, "批": {"radikaller": "扌 (el) + 比 (karşılaştırmak)", "hikaye": "Elinizle karşılaştırmak. Değer biçmek = eleştirmek, onaylamak."}, "革": {"radikaller": "革 (hayvan derisi)", "hikaye": "Hayvan derisinin işlenerek açılmış hali. Ham maddeden yenilik = deri, reform."}, "貿": {"radikaller": "卯 (kapı açmak) + 貝 (para)", "hikaye": "Kapıyı parayla açmak. Para için kapıları açmak = ticaret."}, "易": {"radikaller": "日 (güneş) + 勿 (dalga)", "hikaye": "Güneş dalgalanıyor — karizantezi değişken ama tahmin edilebilir. Akıp giden = kolay, değiş tokuş."}, "販": {"radikaller": "貝 (para) + 反 (ters çevirmek)", "hikaye": "Parayı ters çevirip ürüne dönüştürmek. Para karşılığı vermek = satmak."}, "宗": {"radikaller": "宀 (çatı) + 示 (ilahi)", "hikaye": "İlahi şeylerin çatı altında toplandığı yer. Kutsal merkez = din, mezhep."}, "慣": {"radikaller": "忄 (kalp) + 貫 (dizmek)", "hikaye": "Kalbin alışılagelmiş düzeni. Tekrarla kalbe işlemek = alışkanlık."}, "縮": {"radikaller": "糸 (iplik) + 宿 (konaklama)", "hikaye": "Misafirhanede sıkışmış iplik gibi. Kıvrılıp küçülmek = büzülmek, kısaltmak."}, "奥": {"radikaller": "米 (pirinç) + 大 (büyük) + 廾 (iki el)", "hikaye": "İki eliyle büyük pirinç çuvalını ittirip deponun en arkasına koymak. En uzak köşe = derinlik, iç."}, "燃": {"radikaller": "火 (ateş) + 然 (böyle olmak)", "hikaye": "Ateşin doğal hali — yanmak ona göre. Doğal tutuşma = yanmak."}, "京": {"radikaller": "亠 (üst) + 口 (ağız) + 小 (küçük)", "hikaye": "Tepenin üstünde büyük binalar, altında küçük evler. Yüksek tepedeki şehir = başkent."}, "取": {"radikaller": "耳 (kulak) + 又 (el)", "hikaye": "Savaşta düşmanın kulağını keserek almak. Elde etmek = almak, tutmak."}, "込": {"radikaller": "辶 (yürümek) + 入 (girmek)", "hikaye": "Yürüyerek içeri dalmak. İçine doğru hareket = girmek, doldurmak."}, "品": {"radikaller": "三 口 (üç ağız)", "hikaye": "Üç ağız bir şeyi tartışıyor. Herkesin konuştuğu = ürün, kalite."}, "世": {"radikaller": "三 十 (üç on)", "hikaye": "Otuz yıl = bir nesil. Nesillerin birbirini takip etmesi = dünya, nesil."}, "段": {"radikaller": "殳 (darbe) + 㔾 (kırmak)", "hikaye": "Taşı kırıp basamak oluşturmak. Katman katman çıkmak = basamak, seviye."}, "的": {"radikaller": "白 (beyaz) + 勺 (kaşık)", "hikaye": "Beyaz hedef üzerine atılan ok. Tam isabet noktası = hedef, -sal eki."}, "議": {"radikaller": "言 (söz) + 義 (adalet)", "hikaye": "Adalet için konuşmak. Doğruyu tartışmak = toplantı, tartışmak."}, "触": {"radikaller": "角 (boynuz) + 虫 (böcek)", "hikaye": "Böceğin anteniyle her şeye dokunması. Hassas temas = dokunmak."}, "被": {"radikaller": "衤 (giysi) + 皮 (deri)", "hikaye": "Deri üzerine giyilen. Üstüne örtülen = giymek, pasif eki."}, "略": {"radikaller": "田 (tarla) + 各 (her)", "hikaye": "Her tarladan biraz almak. Hepsinden özünü çıkarmak = kısaltmak, plan."}, "招": {"radikaller": "扌 (el) + 召 (çağırmak)", "hikaye": "Elinizi sallayarak birini çağırmak. El kol hareketi = davet etmek."}, "均": {"radikaller": "土 (toprak) + 匀 (eşit dağıtmak)", "hikaye": "Toprağı eşit dağıtmak. Herkes aynı payı alır = eşit, ortalama."}, "節": {"radikaller": "竹 (bambu) + 即 (hemen)", "hikaye": "Bambunun boğum yerleri — bitişten önce gelen. Düzenli aralık = eklem, mevsim."}, "賛": {"radikaller": "先 (önce) + 貝 (para)", "hikaye": "Para vererek önce gitmek. Desteklemek için katılmak = övmek, onaylamak."}, "賞": {"radikaller": "尚 (değer vermek) + 貝 (para)", "hikaye": "Değerli şeyi para ile ödüllendirmek. Takdir edilen = ödül."}, "委": {"radikaller": "禾 (tahıl) + 女 (kadın)", "hikaye": "Kadın ekin gibi eğilmiş — başkasına bırakmış. Sorumluluğu devretmek = komite, yetki devri."}, "負": {"radikaller": "人 (insan) + 貝 (para)", "hikaye": "Borç yüklü insan. Omuzundaki para ağırlığı = kaybetmek, yük."}, "補": {"radikaller": "衤 (giysi) + 甫 (yeni)", "hikaye": "Yeni yama vurmak. Eksik yeri doldurmak = tamamlamak, yardımcı."}, "訓": {"radikaller": "言 (söz) + 川 (nehir)", "hikaye": "Nehir gibi akan söz. Sürekli tekrarlayan öğreti = eğitmek, kun okuyuşu."}, "術": {"radikaller": "行 (yol) + 朮 (bir bitki)", "hikaye": "Bitkisel bilgiyi yolda uygulamak. Bilgiyi eyleme dökmek = teknik, sanat."}, "造": {"radikaller": "辶 (yürümek) + 告 (bildirmek)", "hikaye": "Bildirdiğini yürüyerek gerçeğe dönüştürmek. Düşünceyi somutlaştırmak = yaratmak, inşa."}, "形": {"radikaller": "开 (açmak) + 彡 (çizgiler)", "hikaye": "Açılıp çizgilerle belirlenen. Sınırları olan görünüm = şekil, biçim."}, "応": {"radikaller": "广 (çatı) + 心 (kalp)", "hikaye": "Çatının altındaki kalp ses duyunca titriyor. Kalbin yanıtı = yanıt vermek, uyum."}, "移": {"radikaller": "禾 (tahıl) + 多 (çok)", "hikaye": "Tahılın çoğalıp yeni yerlere taşınması. Yer değiştirmek = hareket etmek, göç."}, "派": {"radikaller": "氵 (su) + 𠂢 (ayrılmak)", "hikaye": "Nehrin kollarına ayrılması. Farklı yönlere gitmek = hizip, göndermek."}, "拠": {"radikaller": "扌 (el) + 居 (oturmak)", "hikaye": "Elde tutarak oturduğun yer. Dayandığın nokta = dayanak, merkez."}, "典": {"radikaller": "册 (yazılı levhalar) + 丌 (masa)", "hikaye": "Masanın üzerindeki kutsal yazılı levhalar. Referans alınan eser = klasik, sözlük."}, "絡": {"radikaller": "糸 (iplik) + 各 (her yer)", "hikaye": "Her yere uzanan iplik ağı. Her yeri birbirine bağlamak = bağlamak, iletişim."}, "証": {"radikaller": "言 (söz) + 正 (doğru)", "hikaye": "Doğru söz. İnkar edilemez gerçek = kanıtlamak, belge."}, "能": {"radikaller": "厶 (gizli) + 月 (et) + 匕匕 (ayı ayakları)", "hikaye": "Ayının gizlice her yerde yürüyebilmesi. Doğal güçle her şeyi yapmak = yetenek."}, "旧": {"radikaller": "旧 = 臼 sadeleşmiş", "hikaye": "Havan tozu — eski yöntemle tahıl öğütme aleti. Geleneksel araç = eski."}, "施": {"radikaller": "方 (yön) + 也 (aynı zamanda/yılan)", "hikaye": "Her yöne yılan gibi uzanan uygulama. Dağıtmak, uygulamak = tesis, uygulamak."}, "防": {"radikaller": "阝 (tepe) + 方 (yön)", "hikaye": "Tepe her yönden gelen düşmanı görür. Yukarıdan engel olmak = önlemek, savunma."}, "域": {"radikaller": "土 (toprak) + 或 (belki/ya da)", "hikaye": "Toprağın sınırlarla belirlenmiş alanı. Ya bu ya da o taraf = alan, bölge."}, "側": {"radikaller": "亻 (insan) + 則 (kural/yan)", "hikaye": "Kurala göre insanın yanı. Her şeyin bir tarafı var = yan, taraf."}, "想": {"radikaller": "相 (karşılıklı) + 心 (kalp)", "hikaye": "Kalbin karşısındaki şeyi düşünmesi. Zihinsel yüz yüze gelme = hayal etmek, düşünce."}, "適": {"radikaller": "辶 (yürümek) + 啇 (uygun)", "hikaye": "Uygun yere doğru yürümek. Tam yerine gitmek = uygun, tam."}, "末": {"radikaller": "木 (ağaç) + 一 (üst çizgi)", "hikaye": "Ağacın tepesine çizgi — en uç nokta. Ucun ucu = son, uç."}, "義": {"radikaller": "羊 (koyun) + 我 (ben)", "hikaye": "Koyun gibi temiz ben — erdemli kişi. Doğru olan yol = ilke, anlam, görev."}, "務": {"radikaller": "矛 (mızrak) + 攴 (vurmak) + 力 (güç)", "hikaye": "Mızrakla güçlü vuruşlar. Savaştaki görev gibi = yükümlülük, iş."}, "賃": {"radikaller": "任 (görev) + 貝 (para)", "hikaye": "Görev karşılığı para. Çalışma bedeli = kira, ücret."}, "素": {"radikaller": "糸 (iplik) + 垂 (sarkmak)", "hikaye": "İşlenmemiş, boyanmamış sarkık iplik. Doğal haliyle = unsur, sade."}, "景": {"radikaller": "日 (güneş) + 京 (başkent)", "hikaye": "Başkentin üzerinde parlayan güneş. Güneşin aydınlattığı görüntü = manzara, sahne."}, "厳": {"radikaller": "敢 (cesur) + 厂 (uçurum)", "hikaye": "Uçurum kenarında cesurca durmak. Sert ve kararlı = katı, ciddi."}, "刺": {"radikaller": "朿 (diken) + 刀 (bıçak)", "hikaye": "Dikenli bıçak. Sivri ve keskin = delmek, iğne, isim kartı."}, "矛": {"radikaller": "矛 (mızrak ucu)", "hikaye": "Uzun sapın ucundaki sivri uç. Savaş aleti = mızrak, çelişki."}, "盾": {"radikaller": "廴 (uzanan) + 目 (göz)", "hikaye": "Gözleri koruyan büyük nesne. Gözü örten = kalkan, savunma."}, "企": {"radikaller": "人 (insan) + 止 (ayak/durmak)", "hikaye": "Parmak ucunda yükselen insan. Uzağa bakmak için yükselmek = planlamak, girişim."}, "摘": {"radikaller": "扌 (el) + 啇 (seçmek)", "hikaye": "Elle en iyi olanı seçip koparmak. Dikkatle ayırt etmek = toplamak, belirtmek."}, "廃": {"radikaller": "广 (çatı) + 発 (fırlatmak)", "hikaye": "Çatıyı fırlatıp atmak. Terk edilmiş yapı = harap, iptal etmek."}, "棄": {"radikaller": "世 (nesil) + 木 (ağaç) + 廾 (iki el)", "hikaye": "Nesiller boyunca kullanılan ağacı sonunda atmak. Değersiz saymak = terk etmek."}, "縦": {"radikaller": "糸 (iplik) + 従 (takip etmek)", "hikaye": "Birini takip eden dikey iplik. Yukarıdan aşağıya inen = dikey."}, "横": {"radikaller": "木 (ağaç) + 黄 (sarı)", "hikaye": "Sarı uzun tahta. Soldan sağa uzanan = yatay, yan."}, "刻": {"radikaller": "亥 (domuz/zaman) + 刀 (bıçak)", "hikaye": "Zamanı bıçakla kazımak. Geçen anı kaydetmek = oymak, an."}, "奮": {"radikaller": "奮 (kuş kanatları açık + toprak)", "hikaye": "Topraktan fırlayan kuş. Birden harekete geçmek = heyecanlanmak."}, "励": {"radikaller": "厂 (uçurum) + 万 (on bin) + 力 (güç)", "hikaye": "On bin kez düşüp kalkan güçlü insan. Sürekli çabalamak = teşvik etmek."}, "促": {"radikaller": "亻 (insan) + 足 (ayak)", "hikaye": "Birinin ayağına basarak hızlandırmak. Acele ettirmek = teşvik, hızlandırmak."}, "督": {"radikaller": "叔 (amca) + 目 (göz)", "hikaye": "Amca gibi gözü üstte tutan. Her şeyi izleyen = denetlemek, yönetmen."}, "監": {"radikaller": "臣 (köle/göz) + 皿 (kap)", "hikaye": "Kaptaki suya bakıp kendini izleyen. Yansımayı görmek = izlemek, denetimci."}, "臨": {"radikaller": "臣 (büyük göz) + 品 (çok şey) + 人 (insan)", "hikaye": "Büyük gözlerle pek çok şeyi kontrol eden. Hazır ve bakan = katılmak, klinik."}, "却": {"radikaller": "去 (gitmek) + 卩 (mühür)", "hikaye": "Mühürü geri iade etmek. Göndereni geri çevirmek = reddetmek, geri."}, "充": {"radikaller": "育 (yetiştirmek) olmadan üst", "hikaye": "Büyüyüp dolup taşan. Kapasiteye ulaşmak = doldurmak, yeterli."}, "穏": {"radikaller": "禾 (tahıl) + 隐 (gizli)", "hikaye": "Sakin tarlada gizlenmiş. Sessiz ve güvenli = sakin, huzurlu."}, "緩": {"radikaller": "糸 (iplik) + 爰 (yumuşatmak)", "hikaye": "Gergin ipliği yavaşça serbest bırakmak. Gerilimi azaltmak = gevşemek, yavaş."}, "縛": {"radikaller": "糸 (iplik) + 尃 (yaymak)", "hikaye": "İplikle saracak kadar yaymak. Hareketi engelleyen = bağlamak."}, "脱": {"radikaller": "月/肉 (vücut) + 兑 (açmak)", "hikaye": "Vücudu açıp serbest bırakmak. Kabuğundan çıkmak = çıkarmak, kaçmak."}, "漏": {"radikaller": "氵 (su) + 屚 (damlama)", "hikaye": "Çatıdan düşen su damlaları. Engellenemeyen sızıntı = sızmak, kaçırmak."}, "繁": {"radikaller": "敏 (çevik) + 糸 (iplik)", "hikaye": "İplikler çevikçe çoğalıyor. Hızla büyüme = yoğun, refah."}, "荷": {"radikaller": "艹 (bitki) + 何 (ne)", "hikaye": "Taşınan bitki. Omuzda ne var? = yük, eşya."}, "墓": {"radikaller": "莫 (gün batımı) + 土 (toprak)", "hikaye": "Gün batımında toprağa gömülen. Son durağın toprağı = mezar."}, "貧": {"radikaller": "分 (bölmek) + 貝 (para)", "hikaye": "Parayı bölünce azalır. Parçalanmış servet = yoksul."}, "富": {"radikaller": "宀 (çatı) + 畐 (dolu kap)", "hikaye": "Çatı altı dolu kaplarla dolu. Bolluk içindeki ev = zengin."}, "模": {"radikaller": "木 (ağaç) + 莫 (büyük)", "hikaye": "Büyük ağaçtan yapılmış kalıp. Örnek alınan şey = model, taklit."}, "猛": {"radikaller": "犭 (hayvan) + 孟 (ilk/güçlü)", "hikaye": "Sürünün en güçlü hayvanı. Kontrol edilemeyen güç = vahşi, sert."}, "鮮": {"radikaller": "魚 (balık) + 羊 (koyun)", "hikaye": "Taze balık ve taze koyun eti. En taze ikisi bir arada = taze, canlı."}, "奪": {"radikaller": "隹 (kuş) + 寸 (el) + 大 (büyük)", "hikaye": "Büyük eliyle kuşu kapıp almak. Zorla ele geçirmek = almak, gasp."}, "壊": {"radikaller": "土 (toprak) + 褱 (sarılmak)", "hikaye": "Toprağa sarılıp çöküş. Parçalara dağılmak = yıkmak, bozmak."}, "喪": {"radikaller": "哭 (ağlamak) + 亡 (kayıp)", "hikaye": "Kayıp için ağlamak. Birini kaybetmenin acısı = yas, kayıp."}, "滞": {"radikaller": "氵 (su) + 帯 (kemer)", "hikaye": "Kemere takılmış su gibi. Akamayan, sıkışmış = durmak, gecikme."}, "遅": {"radikaller": "辶 (yürümek) + 犀 (gergedan)", "hikaye": "Gergedan kadar yavaş yürümek. Ağır adımlar = geç, yavaş."}, "渋": {"radikaller": "氵 (su) + 歰 (pürüzlü)", "hikaye": "Pürüzlü akan su. Akışı zor olan = sıkışıklık, buruk tat."}, "焦": {"radikaller": "隹 (kuş) + 火 (ateş)", "hikaye": "Kuş ateşin üzerinde — kaçamayıp yanıyor. Sabırsızlıkla beklemek = yanmak, odak."}, "慌": {"radikaller": "忄 (kalp) + 荒 (harabe)", "hikaye": "Kalp harabeye dönmüş gibi. Kontrol kaybı = paniklemek."}, "把": {"radikaller": "扌 (el) + 巴 (yılan/kavramak)", "hikaye": "Yılan gibi kavramak. Sıkıca tutmak = kavramak, tutamak."}, "握": {"radikaller": "扌 (el) + 屋 (ev)", "hikaye": "Evi gibi sımsıkı tutan el. Güvenle kavramak = kavramak, sıkmak."}, "鑑": {"radikaller": "金 (metal) + 監 (izlemek)", "hikaye": "Metal aynada kendini izlemek. Kendi gerçeğini görmek = yansıma, değerlendirmek."}, "朗": {"radikaller": "良 (iyi) + 月 (ay)", "hikaye": "İyi bir gecede parlayan ay gibi. Aydınlık ve neşeli = neşeli, açık."}, "謙": {"radikaller": "言 (söz) + 兼 (ikisini birden)", "hikaye": "İki şeyi söylememek. Hem biliyor hem susuyor = alçakgönüllü."}, "虚": {"radikaller": "虍 (kaplan/çerçeve) + 丘 (tepe)", "hikaye": "Boş tepe — içinde kaplan yok. Görünen ama gerçek olmayan = boş, sahte."}, "敏": {"radikaller": "每 (her/anne) + 攴 (vurmak)", "hikaye": "Annenin her vuruşa anında tepki vermesi. Hızlı algılama = çevik, hassas."}, "鋭": {"radikaller": "金 (metal) + 兑 (açık/parlak)", "hikaye": "Parlatılmış metal gibi. Berrak ve keskin = keskin."}, "泡": {"radikaller": "氵 (su) + 包 (sarmak)", "hikaye": "Suya sarılmış hava. Su içindeki hava baloncuğu = köpük, kabarcık."}, "粒": {"radikaller": "米 (pirinç) + 立 (ayakta)", "hikaye": "Ayakta duran pirinç tanesi. Kendi başına duran küçük şey = tanecik."}, "炎": {"radikaller": "火 + 火 (iki ateş)", "hikaye": "Üst üste iki ateş — daha yüksek alev. Büyüyen ısı = alev, iltihap."}, "霧": {"radikaller": "雨 (yağmur) + 務 (görev)", "hikaye": "Görevini yapan yağmur — ama yere düşmüyor. Havada asılı su = sis."}, "嵐": {"radikaller": "山 (dağ) + 風 (rüzgar)", "hikaye": "Dağdan esen şiddetli rüzgar. Kontrol edilemeyen doğa = fırtına."}, "濁": {"radikaller": "氵 (su) + 蜀 (tırtıl)", "hikaye": "Tırtıl geçen su gibi bulanmış. Safsızlaşmış su = bulanık."}, "澄": {"radikaller": "氵 (su) + 登 (tırmanmak)", "hikaye": "Yüksek kaynak suyu gibi temiz. Dipten temizlenerek yükselen = berrak."}, "滴": {"radikaller": "氵 (su) + 啇 (damlamak)", "hikaye": "Tek bir noktaya toplanan su. Birikerek düşen = damla."}, "涼": {"radikaller": "氵 (su) + 京 (başkent/yüksek)", "hikaye": "Yüksek yerden gelen temiz su gibi. Taze ve ferah = serin."}, "暖": {"radikaller": "日 (güneş) + 爰 (yumuşatmak)", "hikaye": "Güneşin sertliği yumuşatması. Soğuğu gideren sıcaklık = ılık, ısıtma."}, "沸": {"radikaller": "氵 (su) + 弗 (bağlamak)", "hikaye": "Su bağlarını koparıyor. Kısıtlamalar kalktığında oluşan enerji = kaynamak."}, "凍": {"radikaller": "冫 (buz) + 東 (doğu)", "hikaye": "Doğudan gelen soğuk hava. Şiddetli soğuk = donmak."}, "溶": {"radikaller": "氵 (su) + 容 (kabul etmek)", "hikaye": "Su her şeyi içine alıyor. Maddeyi kendine çekmek = erimek, çözülmek."}, "渇": {"radikaller": "氵 (su) + 曷 (neden/çığlık)", "hikaye": "Su nerede diye çığlık atmak. Su özlemi = susamak."}, "潤": {"radikaller": "氵 (su) + 閏 (artık ay)", "hikaye": "Artık ayın yağmurları gibi bolca su. Ekstra nem = nemlendirmek, kâr."}, "乾": {"radikaller": "乙 (bükülmek) + 倝 (güneş doğuşu)", "hikaye": "Güneşin doğuşuyla her şeyin kuruması. Güneşle gelen kuruluk = kurulamak."}, "湿": {"radikaller": "氵 (su) + 显 (belirgin)", "hikaye": "Belirgin şekilde su içeren. Görünür nem = nemli."}, "煙": {"radikaller": "火 (ateş) + 垔 (toprak+çerçeve)", "hikaye": "Ateşin toprağı terk eden ruhu. Yukarı çıkan görünmez iz = duman."}, "灰": {"radikaller": "火 (ateş) + 又 (el)", "hikaye": "Ateşten geriye kalan, elle tutulan şey. Yanmışın kalıntısı = kül."}, "崩": {"radikaller": "山 (dağ) + 朋 (arkadaşlar)", "hikaye": "Arkadaşlar gibi birarada duran dağ taşları ayrılıyor. Taşların dağılması = çökmek."}, "揺": {"radikaller": "扌 (el) + 䍃 (sallanan)", "hikaye": "Elinizde sallanan nesne. Kontrolsüz hareket = sallanmak."}, "塗": {"radikaller": "氵 (su) + 土 (toprak) + 手 (el)", "hikaye": "Su ve toprak karışımını elle yüzeye sürmek. Yüzeyi kaplamak = boyamak, sürmek."}, "剥": {"radikaller": "彔 (çizmek) + 刀 (bıçak)", "hikaye": "Bıçakla dış kabuğu çizmek. İnce tabakaları soyup almak = soymak."}, "磨": {"radikaller": "麻 (kenevir) + 石 (taş)", "hikaye": "Taşla kenevirden iplik çıkarmak. Taşla pürüzü gidermek = cilalamak, fırçalamak."}, "擦": {"radikaller": "扌 (el) + 祭 (ritüel)", "hikaye": "Ritüelde temizlemek için ovmak. İki yüzey arası hareket = sürtmek, ovmak."}, "縫": {"radikaller": "糸 (iplik) + 逢 (rastlaşmak)", "hikaye": "İpliklerin kumaşta buluşması. İki parçayı birleştirmek = dikmek."}, "織": {"radikaller": "糸 (iplik) + 戠 (işaret/ses)", "hikaye": "İpliklerin ritimli sesi. Tekrarlı hareketle yaratmak = dokumak."}, "染": {"radikaller": "氵 (su) + 九 (dokuz) + 木 (ağaç)", "hikaye": "Dokuz kez boyaya batırmak — derin renk için. Rengi içine çekmek = boyamak, bulaşmak."}, "繊": {"radikaller": "糸 (iplik) + 韱 (ince yabani soğan)", "hikaye": "Soğan gibi ince katmanlı iplik. En ince dokunun birimi = ince, lif."}, "鍛": {"radikaller": "金 (metal) + 段 (basamak)", "hikaye": "Metali basamak basamak döverek sertleştirmek. Her vuruş daha güçlü = dövmek, antrenman."}, "矢": {"radikaller": "矢 (ok)", "hikaye": "Fırlatılan okun şekli. Düz ve hızlı giden = ok, yön."}, "弦": {"radikaller": "弓 (yay) + 玄 (koyu/gerilmiş)", "hikaye": "Yayın gergin koyu ipi. Gerilim = kiriş, yay ipi."}, "笛": {"radikaller": "竹 (bambu) + 由 (çıkmak)", "hikaye": "Bambunun içinden çıkan ses. Delikli bambu = flüt, düdük."}, "鼓": {"radikaller": "壴 (davul şekli) + 攴 (vurmak)", "hikaye": "Davulun vurulması. Ritim çıkaran = davul."}, "詩": {"radikaller": "言 (söz) + 寺 (tapınak)", "hikaye": "Tapınak gibi düzenli, kutsal söz. Ritmik, ölçülü dil = şiir."}, "舞": {"radikaller": "無 (yokluk) + 舛 (karşı adım)", "hikaye": "Ayakların karşılıklı hareketi — bu dünyadan uzak. Ritimle hareket = dans etmek."}, "踊": {"radikaller": "足 (ayak) + 甬 (boru/ileri)", "hikaye": "Ayaklar ileri fırlıyor. Yükselerek hareket etmek = zıplamak, dans."}, "彫": {"radikaller": "周 (etraf) + 彡 (çizgiler)", "hikaye": "Etrafını çizgilerle işlemek. Yüzeye şekil vermek = oymak."}, "描": {"radikaller": "扌 (el) + 苗 (fide)", "hikaye": "Fidanı kağıda taşımak. Gördüğünü yüzeye aktarmak = çizmek, tasvir."}, "絵": {"radikaller": "糸 (iplik) + 会 (bir araya gelme)", "hikaye": "Renklerin bir araya gelmesi. Renkli ipliklerin dansı = resim."}, "幕": {"radikaller": "莫 (gün batımı) + 巾 (bez)", "hikaye": "Gün batımı karanlığı gibi kapatan bez. Görüşü engelleyen = perde, dönem."}, "劇": {"radikaller": "豦 (çatışma) + 刀 (bıçak)", "hikaye": "Bıçak gibi keskin çatışma. Hayatın dramatik anı = oyun, drama."}, "俳": {"radikaller": "亻 (insan) + 非 (değil)", "hikaye": "Normal olmayan insan. Sıra dışı hareket eden = haiku şairi, aktör."}, "句": {"radikaller": "勹 (sarmak) + 口 (ağız)", "hikaye": "Ağızdan sarılmış, tamamlanmış birim. Çerçevelenmiş söz = dize, cümle."}, "響": {"radikaller": "郷 (memleket) + 音 (ses)", "hikaye": "Memleketin sesi uzaklara ulaşıyor. Ses dalgalarının yayılması = yankılanmak."}, "奏": {"radikaller": "三 (üç) + 大 (büyük) + 天 (gökyüzü)", "hikaye": "Gökyüzüne sunulan büyük müzik. Tanrılara adanmış ses = çalmak, sunmak."}, "賄": {"radikaller": "貝 (para) + 有 (sahip olmak)", "hikaye": "Para ile sahip olmak. Para ile gizlice almak = rüşvet, karşılamak."}, "傍": {"radikaller": "亻 (insan) + 旁 (yan taraf)", "hikaye": "Yanında duran insan. Uzak değil ama araya girmiyor = yanında, kenar."}, "尚": {"radikaller": "八 (yukarı açılmak) + 口 (ağız)", "hikaye": "Ağzın yukarı açılması. Hâlâ konuşmaya devam etmek = hâlâ, değer vermek."}, "既": {"radikaller": "皀 (tahıl kokusu) + 旡 (dönmek)", "hikaye": "Yemeği bitirip dönmek. Artık tamamlandı = zaten, önceden."}, "延": {"radikaller": "廴 (uzanan yol) + 止 (adım)", "hikaye": "Yolu adım adım uzatmak. Bitişi öteleyen = uzatmak, ertelemek."}, "掘": {"radikaller": "扌 (el) + 屈 (eğilmek)", "hikaye": "Eğilip elinizle toprağı kazmak. Yerin içine girmek = kazmak."}, "埋": {"radikaller": "土 (toprak) + 里 (köy/içi)", "hikaye": "Toprağın içine saklanan şey. Görmezden gelinmek = gömmek, doldurmak."}, "徐": {"radikaller": "彳 (adım) + 余 (ben/fazla)", "hikaye": "Adımların fazla yavaş gitmesi. Ağır ağır ilerlemek = yavaş yavaş."}, "粛": {"radikaller": "肃 (dikilerek)", "hikaye": "Diken gibi dikilerek sessizce beklemek. Gürültüsüz, disiplinli = ciddi, sessiz."}, "催": {"radikaller": "亻 (insan) + 崔 (yüksek)", "hikaye": "Yüksekten baskı yapan insan. Yukarıdan zorlayarak = baskı yapmak, düzenlemek."}, "郊": {"radikaller": "交 (çapraz) + 阝 (bölge)", "hikaye": "Şehir merkezinin dışında, yolların çaprazlandığı bölge = banliyö."}, "赴": {"radikaller": "走 (koşmak) + 卜 (işaret)", "hikaye": "İşaret edilen yere koşmak. Çağrıldığın yere gitmek = yönelmek, göreve gitmek."}, "法": {"radikaller": "氵 (su) + 去 (gitmek)", "hikaye": "Suyun kendi yolunu bulması. Su kendi doğal yolunu izler = yasa, yöntem."}, "識": {"radikaller": "言 (söz) + 戠 (ses/işaret)", "hikaye": "Sesi işaret etmek. Duyduğunu anlamlandırmak = bilmek, tanımak."}, "塞": {"radikaller": "𡫻 (çatı) + 土 (toprak)", "hikaye": "Toprağı çatıya kadar doldurmak. Boşluğu kapatmak = tıkamak, kale."}, "倣": {"radikaller": "亻 (insan) + 放 (serbest bırakmak)", "hikaye": "Birinin serbest hareketini takip eden insan. Peşinden gitmek = taklit etmek."}, "烈": {"radikaller": "列 (sıra) + 火 (ateş)", "hikaye": "Sıra sıra yanan ateş. Şiddetli ısı = şiddetli, tutkulu."}, "僅": {"radikaller": "亻 (insan) + 堇 (sarı toprağın az bitkisi)", "hikaye": "Az bitkiden beslenen insan. Çok az miktarda = sadece biraz."}, "践": {"radikaller": "足 (ayak) + 戔 (ince/az)", "hikaye": "Küçük adımlarla yürümek. Söylediğini ayağa bindirmek = uygulamak, basmak."}, "朽": {"radikaller": "木 (ağaç) + 丂 (bükülen)", "hikaye": "Bükülen, yumuşayan ağaç. Zamanla gücünü kaybeden = çürümek."}, "且": {"radikaller": "且 (üst üste taşlar)", "hikaye": "Üst üste dizilmiş taşlar — adım adım eklenen. Hem... hem de = üstelik, ve."}, "某": {"radikaller": "甘 (tatlı) + 木 (ağaç)", "hikaye": "Tatlı meyve veren ağaç — adını bilmediğiniz. Belirsiz nesne = bir, belli."}, "及": {"radikaller": "人 (insan) + 又 (el)", "hikaye": "Koşan insana uzanan el. Ulaşmak üzere = ulaşmak, etkilemek."}, "繰": {"radikaller": "糸 (iplik) + 巢 (yuva)", "hikaye": "Yuvadan sarılan iplik. Yumaktan çıkartmak = sarmak, tekrar etmek."}, "謡": {"radikaller": "言 (söz) + 䍃 (sallanan)", "hikaye": "Sallanan, ritmik söz. Titreşerek çıkan ses = şarkı, türkü."}, "韻": {"radikaller": "音 (ses) + 員 (üye)", "hikaye": "Sesin bir parçası. Seslerin birbirini tamamlaması = kafiye, ritim."}, "鳥": {"radikaller": "鳥 (kuş)", "hikaye": "Gagası, bedeni, kanatları ve kuyruğuyla tam kuş figürü. Tüylü, uçan = kuş."}, "魚": {"radikaller": "魚 (balık)", "hikaye": "Başı, gövdesi ve kuyruğuyla balık figürü. Suda yüzen = balık."}, "虫": {"radikaller": "虫 (yılan/böcek)", "hikaye": "Kıvrılan yılan. Küçük kıvrılan yaratık = böcek, yılan."}, "草": {"radikaller": "艹 (bitki) + 早 (erken)", "hikaye": "Erkenden yetişen bitki. İlk biten yeşil = çim, ot."}, "根": {"radikaller": "木 (ağaç) + 艮 (durmak)", "hikaye": "Ağacın durduğu, kımıldamayan alt kısmı. Her şeyin tutunduğu = kök."}, "葉": {"radikaller": "艹 (bitki) + 世 (nesil) + 木 (ağaç)", "hikaye": "Nesiller boyunca ağaçtan düşen şey. Baharın çocukları = yaprak."}, "種": {"radikaller": "禾 (tahıl) + 重 (ağır)", "hikaye": "Ağır ve değerli tahıl tanesi. Geleceği içinde taşıyan = tohum, tür."}, "林": {"radikaller": "木 + 木 (iki ağaç)", "hikaye": "İki ağaç yan yana — henüz orman değil. Küçük ağaçlık = koru."}, "森": {"radikaller": "木 + 木 + 木 (üç ağaç)", "hikaye": "Üç ve daha fazla ağaç = yoğun derin orman. Çok ağaç = orman."}, "光": {"radikaller": "小 (küçük) + 兀 (yukarı)", "hikaye": "Küçük bir ateş yukarı taşıyan insan. Işığı taşımak = ışık, parlamak."}, "星": {"radikaller": "日 (güneş/ışık) + 生 (doğmak)", "hikaye": "Işığın doğduğu yer. Kendi ışığını üreten = yıldız."}, "道": {"radikaller": "辶 (yürümek) + 首 (baş/lider)", "hikaye": "Başın gösterdiği yönde yürümek. Önderin açtığı = yol, yöntem."}, "橋": {"radikaller": "木 (ağaç) + 喬 (yüksek)", "hikaye": "Yüksek ağaç direkleri üzerine kurulu. Yüksekten iki tarafı birleştiren = köprü."}, "飛": {"radikaller": "飛 (kanatlar açık)", "hikaye": "İki kanat açık, kuyruk aşağıda uçan kuş. Yerden ayrılmak = uçmak."}, "走": {"radikaller": "夭 (koşan insan) + 止 (ayak)", "hikaye": "Öne eğilmiş, adım atan insan. Hızlı hareket = koşmak."}, "泳": {"radikaller": "氵 (su) + 永 (uzun/yüzmek)", "hikaye": "Suda uzun uzun yüzmek. Suyun içinde hareket = yüzmek."}, "遊": {"radikaller": "辶 (yürümek) + 斿 (sancak sallamak)", "hikaye": "Sancak sallayarak serbestçe gezmek. Amaçsız, keyifli hareket = oynamak, gezmek."}, "働": {"radikaller": "亻 (insan) + 動 (hareket)", "hikaye": "İnsan hareketinin özel biçimi. Amaçlı, üretken hareket = çalışmak."}, "押": {"radikaller": "扌 (el) + 甲 (zırh/sert)", "hikaye": "Sert zırhı elle itmek. Güçle ilerletmek = itmek, basmak."}, "投": {"radikaller": "扌 (el) + 殳 (fırlatmak)", "hikaye": "Elinizden fırlatmak. Hedefle bağı kesmek = atmak, yatırım."}, "渡": {"radikaller": "氵 (su) + 度 (ölçü/geçmek)", "hikaye": "Su genişliğini ölçerek geçmek. Karşı kıyıya varmak = geçmek, teslim."}, "集": {"radikaller": "隹 (kuş) + 木 (ağaç)", "hikaye": "Kuşların bir ağaçta toplanması. Aynı yerde bir araya gelme = toplamak."}, "別": {"radikaller": "冎 (kemik) + 刀 (bıçak)", "hikaye": "Kemiği bıçakla ayırmak. İki parçayı ayırt etmek = ayrılmak, farklı."}, "始": {"radikaller": "女 (kadın) + 台 (platform)", "hikaye": "Platformdaki kadın ilk adımı atıyor. Başlangıcın anı = başlamak."}, "終": {"radikaller": "糸 (iplik) + 冬 (kış)", "hikaye": "Kışın ipliği bitirmesi. Mevsimin sonu = bitmek, son."}, "引": {"radikaller": "弓 (yay) + 丨 (dikey)", "hikaye": "Yayın kirişini geri çekmek. Kendinize doğru çekmek = çekmek, indirim."}, "寝": {"radikaller": "宀 (çatı) + 爿 (tahta yatak) + 侵 (girmek)", "hikaye": "Çatı altındaki tahta yatağa girmek. Uzanmak = uyumak."}, "着": {"radikaller": "羊 (koyun) + 目 (göz) + 大 (büyük)", "hikaye": "Büyük göz koyun gibi yapışık bakıyor. Bir yere yapışmak = giymek, varmak."}, "歌": {"radikaller": "哥 (ağabey/tekrar) + 欠 (nefes)", "hikaye": "Nefesinizi tekrar tekrar kullanmak. Ritimli nefes = şarkı söylemek."}, "習": {"radikaller": "羽 (kanat) + 白 (beyaz/güneş)", "hikaye": "Uçmayı öğrenen kuş günde defalarca kanat çırpıyor. Tekrarla öğrenmek = alışmak, pratik."}, "風": {"radikaller": "几 (masa/çerçeve) + 虫 (böcek)", "hikaye": "Böceklerin uçmasını sağlayan görünmez güç. Rüzgar böcekleri taşır = rüzgar."}, "雪": {"radikaller": "雨 (yağmur) + 彗 (süpürge)", "hikaye": "Yağmur yere düşünce süpürge gibi beyaza büründürür. Soğukta dökülen = kar."}, "雲": {"radikaller": "雨 (yağmur) + 云 (söylemek/bulut şekli)", "hikaye": "Yağmurun söylediği şey — yağmadan önce gelen. Gökyüzünde dolaşan = bulut."}, "春": {"radikaller": "屯 (filiz) + 日 (güneş)", "hikaye": "Güneşin altında filizler toprağı delip çıkıyor. Yaşamın yeniden başladığı = ilkbahar."}, "夏": {"radikaller": "頁 (baş) + 臼 (eller) + 夂 (ayaklar)", "hikaye": "Başı, elleri ve ayakları ile dans eden insan. Canlılığın dorukta olduğu mevsim = yaz."}, "秋": {"radikaller": "禾 (tahıl) + 火 (ateş)", "hikaye": "Hasat sonrası tarla atıkları yakılıyor. Ateşin ve altın rengin mevsimi = sonbahar."}, "冬": {"radikaller": "夂 (iki adım/yavaş) + 仌 (buz kristalleri)", "hikaye": "Buz üzerinde yavaş adımlar. Her şeyin durduğu, donduğu mevsim = kış."}, "音": {"radikaller": "立 (ayakta durmak) + 日 (güneş/çıkış)", "hikaye": "Güneş gibi yukarı çıkan titreşim. Dilden çıkıp havada duran = ses."}, "港": {"radikaller": "氵 (su) + 巷 (dar sokak)", "hikaye": "Dar suyolunun geniş denizle buluşması. Gemilerin toplanma yeri = liman."}, "船": {"radikaller": "舟 (tekne) + 铅 (kurşun/yol)", "hikaye": "Büyük su yolunda giden tekne. Yolculuğa çıkan büyük araç = gemi."}, "去": {"radikaller": "土 (toprak) + 厶 (gizli giriş)", "hikaye": "Toprağın altına gizlice girmek. Görünmez olmak, uzaklaşmak = gitmek, geçmiş."}};
+var ALL_DETAY = N5_DETAY;
+
+window.onerror = function(msg, src, line, col, err) {
+  var d = document.createElement('div');
+  d.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#c0392b;color:#fff;padding:1rem;font-family:monospace;font-size:0.75rem;z-index:9999;white-space:pre-wrap;';
+  d.textContent = 'HATA: ' + msg + '\nSatır: ' + line + ':' + col;
+  document.body.appendChild(d);
+  return false;
+};
 const KANJI = [
   // N5
   {n:1,k:"日",on:["ニチ","ジツ"],kun:["ひ","か"],m:"Güneş / Gün",jlpt:"N5",ex:[{w:"日本",r:"にほん",m:"Japonya"},{w:"今日",r:"きょう",m:"Bugün"},{w:"日曜日",r:"にちようび",m:"Pazar"}]},
@@ -881,36 +978,38 @@ const KANJI = [
 
 // ── STATE ──
 let currentView = 'list';
-let filteredData = [...KANJI];
+var filteredData = KANJI.slice();
 
 // ── LIST / GRID ──
 function setView(v) {
   currentView = v;
-  ['grid','list','flash'].forEach(x => {
-    document.getElementById(x+'-container').classList.toggle('active', v===x);
-    const btn = document.getElementById('btn-'+x);
+  ['grid','list','flash','favs'].forEach(function(x) {
+    var el = document.getElementById(x+'-container');
+    if (el) el.classList.toggle('active', v===x);
+    var btn = document.getElementById('btn-'+x);
     if (btn) btn.classList.toggle('active', v===x);
   });
-  const searchRow = document.getElementById('search').parentElement;
-  // hide search/filter in flash mode
-  document.getElementById('search').style.display = v==='flash' ? 'none' : '';
-  document.getElementById('jlpt-filter').style.display = v==='flash' ? 'none' : '';
-  document.getElementById('shown-count').parentElement.style.display = v==='flash' ? 'none' : '';
-  if (v !== 'flash') render();
+  var isFlash = v === 'flash';
+  var isFavs  = v === 'favs';
+  document.getElementById('search').style.display = (isFlash || isFavs) ? 'none' : '';
+  document.getElementById('jlpt-filter').style.display = (isFlash || isFavs) ? 'none' : '';
+  document.getElementById('shown-count').parentElement.style.display = (isFlash || isFavs) ? 'none' : '';
+  if (isFavs) { renderFavs(); return; }
+  if (!isFlash) render();
 }
 
 function filter() {
   const q = document.getElementById('search').value.toLowerCase();
-  const jlpt = document.getElementById('jlpt-filter').value;
-  filteredData = KANJI.filter(k => {
-    const matchJlpt = !jlpt || k.jlpt === jlpt;
+  var jlpt = document.getElementById('jlpt-filter').value;
+  filteredData = KANJI.filter(function(k) {
+    var matchJlpt = !jlpt || k.jlpt === jlpt;
     if (!q) return matchJlpt;
     return matchJlpt && (
       k.k.includes(q) ||
       k.m.toLowerCase().includes(q) ||
-      k.on.some(r => r.toLowerCase().includes(q)) ||
-      k.kun.some(r => r.toLowerCase().includes(q)) ||
-      k.ex.some(e => e.w.includes(q) || e.r.includes(q) || e.m.toLowerCase().includes(q))
+      k.on.some(function(r){return r.toLowerCase().includes(q);}) ||
+      k.kun.some(function(r){return r.toLowerCase().includes(q);}) ||
+      k.ex.some(function(e){return e.w.includes(q)||e.r.includes(q)||e.m.toLowerCase().includes(q);})
     );
   });
   document.getElementById('shown-count').textContent = filteredData.length;
@@ -921,44 +1020,55 @@ function render() {
   const noRes = document.getElementById('no-results');
   noRes.style.display = filteredData.length === 0 ? 'block' : 'none';
   if (currentView === 'grid') {
-    document.getElementById('grid-container').innerHTML = filteredData.map(k => `
-      <div class="kanji-card" onclick="openModal(${k.n})">
-        <div class="num">#${k.n}</div>
-        <div class="kanji-char">${k.k}</div>
-        <div class="readings">${k.on[0]||'—'} / ${k.kun[0]||'—'}</div>
-        <div class="meaning">${k.m}</div>
-        <div class="example">${k.ex[0]?.w||''} ${k.ex[0]?.r ? '('+k.ex[0].r+')' : ''}</div>
-      </div>`).join('');
+    document.getElementById('grid-container').innerHTML = filteredData.map(function(k){return '<div class="kanji-card"><div class="num" style="display:flex;align-items:center;gap:0.2rem;"><button class="fav-star-btn" onclick="toggleFav(event,'+k.n+')" id="fav-grid-'+k.n+'">'+(favorites[k.n]?'★':'☆')+'</button>#'+k.n+'</div><div class="kanji-char" onclick="openModal('+k.n+')">'+k.k+'</div><div class="readings" onclick="openModal('+k.n+')">'+(k.on[0]||'—')+' / '+(k.kun[0]||'—')+'</div><div class="meaning" onclick="openModal('+k.n+')">'+k.m+'</div><div class="example" onclick="openModal('+k.n+')">'+((k.ex[0]&&k.ex[0].w)||'')+' '+(k.ex[0]&&k.ex[0].r?'('+k.ex[0].r+')':'')+'</div></div>';}).join('');
   } else {
-    document.getElementById('list-rows').innerHTML = filteredData.map(k => `
-      <div class="list-row" onclick="openModal(${k.n})">
-        <div class="n">${k.n}</div>
-        <div class="k">${k.k}</div>
-        <div class="r">${k.on.join('、')||'—'}<br><span style="color:#1a6b3c">${k.kun.join('、')||'—'}</span></div>
-        <div class="m">${k.m}</div>
-        <div class="e">${k.ex[0]?.w||''} ${k.ex[0]?.r ? '「'+k.ex[0].r+'」' : ''} ${k.ex[0]?.m ? '— '+k.ex[0].m : ''}</div>
-      </div>`).join('');
+    document.getElementById('list-rows').innerHTML = filteredData.map(function(k){return '<div class="list-row"><div class="n" style="display:flex;align-items:center;gap:0.2rem;"><button class="fav-star-btn" onclick="toggleFav(event,'+k.n+')" id="fav-'+k.n+'">'+(favorites[k.n]?'★':'☆')+'</button><span onclick="openModal('+k.n+')">'+k.n+'</span></div><div class="k" onclick="openModal('+k.n+')">'+k.k+'</div><div class="r" onclick="openModal('+k.n+')">'+(k.on.join('、')||'—')+'<br><span style="color:#1a6b3c">'+(k.kun.join('、')||'—')+'</span></div><div class="m" onclick="openModal('+k.n+')">'+k.m+'</div><div class="e" onclick="openModal('+k.n+')">'+((k.ex[0]&&k.ex[0].w)||'')+' '+(k.ex[0]&&k.ex[0].r?'「'+k.ex[0].r+'」':'')+' '+(k.ex[0]&&k.ex[0].m?'— '+k.ex[0].m:'')+'</div></div>';}).join('');
   }
 }
 
 // ── MODAL ──
 function openModal(n) {
-  const k = KANJI.find(x => x.n === n);
+  var k = KANJI.find(function(x){return x.n===n;});
   if (!k) return;
-  document.getElementById('m-num').textContent = `#${k.n} · JLPT ${k.jlpt}`;
+  document.getElementById('m-num-text').textContent = '#' + k.n + ' · JLPT ' + k.jlpt;
+  document.getElementById('m-fav-btn').textContent = favorites[k.n] ? '★' : '☆';
+  document.getElementById('m-fav-btn').className = 'fav-star-btn' + (favorites[k.n] ? ' active' : '');
+  document.getElementById('m-fav-btn').setAttribute('data-n', k.n);
   document.getElementById('m-kanji').textContent = k.k;
   document.getElementById('m-meaning').textContent = k.m;
-  document.getElementById('m-on').innerHTML = k.on.length ? k.on.map(r=>`<div class="pill">${r}</div>`).join('') : '<div class="pill">—</div>';
-  document.getElementById('m-kun').innerHTML = k.kun.length ? k.kun.map(r=>`<div class="pill kun">${r}</div>`).join('') : '<div class="pill kun">—</div>';
-  document.getElementById('m-examples').innerHTML = k.ex.filter(e=>e.w).map(e=>`
-    <div class="example-item">
-      <div class="ex-word">${e.w}</div><div class="ex-read">${e.r}</div><div class="ex-mean">${e.m}</div>
-    </div>`).join('');
+  document.getElementById('m-on').innerHTML = k.on.length ? k.on.map(function(r){return '<div class="pill">'+r+'</div>';}).join('') : '<div class="pill">—</div>';
+  document.getElementById('m-kun').innerHTML = k.kun.length ? k.kun.map(function(r){return '<div class="pill kun">'+r+'</div>';}).join('') : '<div class="pill kun">—</div>';
+  document.getElementById('m-examples').innerHTML = k.ex.filter(function(e){return e.w;}).map(function(e){return '<div class="example-item"><div class="ex-word">'+e.w+'</div><div class="ex-read">'+e.r+'</div><div class="ex-mean">'+e.m+'</div></div>';}).join('');
+  // detay
+  var detayData = ALL_DETAY[k.k];
+  var detayBtn = document.getElementById('m-detay-btn');
+  var detaySec = document.getElementById('m-detay-section');
+  if (detayData) {
+    detayBtn.style.display = 'block';
+    detayBtn.textContent = '⊕ DETAY';
+    detaySec.style.display = 'none';
+    document.getElementById('m-detay-rad').textContent = detayData.radikaller;
+    document.getElementById('m-detay-hik').textContent = detayData.hikaye;
+  } else {
+    detayBtn.style.display = 'none';
+    detaySec.style.display = 'none';
+  }
   document.getElementById('modal-overlay').classList.add('open');
+}
+function toggleModalDetay() {
+  var sec = document.getElementById('m-detay-section');
+  var btn = document.getElementById('m-detay-btn');
+  if (sec.style.display === 'none') {
+    sec.style.display = 'block';
+    btn.textContent = '⊖ DETAY';
+  } else {
+    sec.style.display = 'none';
+    btn.textContent = '⊕ DETAY';
+  }
 }
 function closeModal(e) { if (e.target.id==='modal-overlay') closeModalBtn(); }
 function closeModalBtn() { document.getElementById('modal-overlay').classList.remove('open'); }
-document.addEventListener('keydown', e => { if(e.key==='Escape') closeModalBtn(); });
+document.addEventListener('keydown', function(e){ if(e.key==='Escape'){closeModalBtn();try{closeDetayModal();}catch(x){}try{closeWriteModal();}catch(x){}} });
 
 // ── FLASHCARD ──
 let fcDeck = [];
@@ -975,10 +1085,10 @@ function updateLiveScore() {
 }
 
 function flashReset() {
-  const jlpt = document.getElementById('fc-jlpt').value;
-  fcDeck = (jlpt ? KANJI.filter(k=>k.jlpt===jlpt) : [...KANJI])
-    .map(k=>({...k}))
-    .sort(()=>Math.random()-0.5);
+  var jlpt = document.getElementById('fc-jlpt').value;
+  fcDeck = (jlpt ? KANJI.filter(function(k){return k.jlpt===jlpt;}) : KANJI.slice())
+    .map(function(k){return Object.assign({},k);})
+    .sort(function(){return Math.random()-0.5;});
   fcIndex = 0;
   fcScore = {correct:0, wrong:0, pas:0};
   fcRevealed = false;
@@ -1033,9 +1143,9 @@ function fcToggleFlip() {
   }
 }
 
+// These run after DOM is ready (script is at bottom of body)
 document.getElementById('fc-front').addEventListener('click', fcToggleFlip);
 document.getElementById('fc-back').addEventListener('click', function(e) {
-  // Don't toggle if user is scrolling the back content
   fcToggleFlip();
 });
 
@@ -1047,11 +1157,11 @@ function flashReveal() {
   const userAnswer = inp.value.trim();
 
   // correctness check
-  const correctVariants = k.m.toLowerCase().split(/[/,]/).map(s=>s.trim());
-  const userNorm = userAnswer.toLowerCase().trim();
-  const isCorrect = userAnswer !== '' && correctVariants.some(v =>
-    userNorm === v || v.includes(userNorm) || userNorm.includes(v)
-  );
+  var correctVariants = k.m.toLowerCase().split(/[/,]/).map(function(s){return s.trim();});
+  var userNorm = userAnswer.toLowerCase().trim();
+  var isCorrect = userAnswer !== '' && correctVariants.some(function(v) {
+    return userNorm === v || v.includes(userNorm) || userNorm.includes(v);
+  });
 
   if (userAnswer !== '') {
     if (isCorrect) fcScore.correct++; else fcScore.wrong++;
@@ -1079,13 +1189,18 @@ function flashReveal() {
 
   // fill back face content
   document.getElementById('fc-meaning').textContent = k.m;
-  document.getElementById('fc-pills').innerHTML =
-    k.on.map(r=>`<div class="pill">${r}</div>`).join('') +
-    k.kun.map(r=>`<div class="pill kun">${r}</div>`).join('');
-  document.getElementById('fc-examples').innerHTML = k.ex.filter(e=>e.w).map(e=>`
-    <div class="fc-ans-ex">
-      <div class="ew">${e.w}</div><div class="er">${e.r}</div><div class="em">${e.m}</div>
-    </div>`).join('');
+  document.getElementById('fc-pills').innerHTML = k.on.map(function(r){return '<div class="pill">'+r+'</div>';}).join('')+k.kun.map(function(r){return '<div class="pill kun">'+r+'</div>';}).join('');
+  document.getElementById('fc-examples').innerHTML = k.ex.filter(function(e){return e.w;}).map(function(e){return '<div class="fc-ans-ex"><div class="ew">'+e.w+'</div><div class="er">'+e.r+'</div><div class="em">'+e.m+'</div></div>';}).join('');
+
+  // show detay btn
+  var detayBtn = document.getElementById('fc-detay-btn');
+  if (detayBtn) detayBtn.style.display = ALL_DETAY[k.k] ? '' : 'none';
+  // fav star state
+  var fcFavBtn = document.getElementById('fc-fav-btn');
+  if (fcFavBtn) {
+    fcFavBtn.textContent = favorites[k.n] ? '★' : '☆';
+    fcFavBtn.className = 'fav-star-btn' + (favorites[k.n] ? ' active' : '');
+  }
 
   // flip to back
   document.getElementById('fc-flipper').classList.add('flipped');
@@ -1100,7 +1215,7 @@ function flashNext() {
   flipper.classList.add('exit-left');
   document.getElementById('fc-next-row').classList.remove('visible');
   document.getElementById('fc-input-row').style.display = 'none';
-  setTimeout(()=>{
+  setTimeout(function(){
     fcIndex++;
     if (fcIndex >= fcDeck.length) { fcAnimating = false; flashFinish(); return; }
     flipper.style.transition = 'none';
@@ -1108,10 +1223,10 @@ function flashNext() {
     flipper.classList.add('enter-right');
     void flipper.offsetWidth;
     flashShowCard();
-    requestAnimationFrame(()=>{
+    requestAnimationFrame(function(){
       flipper.style.transition = 'transform 0.6s cubic-bezier(.25,0,.2,1), opacity 0.4s';
       flipper.classList.remove('enter-right');
-      setTimeout(()=>{
+      setTimeout(function(){
         flipper.style.transition = '';
         fcAnimating = false;
       }, 600);
@@ -1128,7 +1243,7 @@ function flashFinish() {
   document.getElementById('sc-g').textContent = fcScore.correct;
   const total = fcDeck.length;
   const pct = Math.round((fcScore.correct / total) * 100);
-  document.getElementById('fc-score-sub').textContent = total + " kartın " + pct + "%'ini doğru bildin";
+  document.getElementById('fc-score-sub').textContent = total + ' karti ' + pct + ' dogru bildin';
   document.getElementById('fc-score').classList.add('open');
   document.getElementById('fc-fill').style.width = '100%';
 }
@@ -1140,6 +1255,13 @@ document.getElementById('fc-answer-input').addEventListener('keydown', function(
     else flashNext();
   }
 });
+document.getElementById('fc-answer-input').addEventListener('focus', function() {
+  setTimeout(function() {
+    var fc = document.getElementById('flash-container');
+    if (fc) fc.scrollTop = 0;
+    window.scrollTo(0, 0);
+  }, 300);
+});
 
 // Swipe right → next card (after reveal)
 // Use touchmove to detect scroll intent early, preventing false swipes
@@ -1147,13 +1269,13 @@ document.getElementById('fc-answer-input').addEventListener('keydown', function(
   let startX = 0, startY = 0, isScrolling = false;
   const scene = document.querySelector('.fc-scene');
 
-  scene.addEventListener('touchstart', e=>{
+  scene.addEventListener('touchstart', function(e){
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
     isScrolling = false;
   }, {passive:true});
 
-  scene.addEventListener('touchmove', e=>{
+  scene.addEventListener('touchmove', function(e){
     if (!isScrolling) {
       const dx = Math.abs(e.touches[0].clientX - startX);
       const dy = Math.abs(e.touches[0].clientY - startY);
@@ -1162,13 +1284,210 @@ document.getElementById('fc-answer-input').addEventListener('keydown', function(
     }
   }, {passive:true});
 
-  scene.addEventListener('touchend', e=>{
+  scene.addEventListener('touchend', function(e){
     if (isScrolling) return;
     const dx = e.changedTouches[0].clientX - startX;
     const dy = Math.abs(e.changedTouches[0].clientY - startY);
     if (dx > 55 && dy < 50 && fcRevealed) flashNext();
   }, {passive:true});
 })();
+
+
+
+// ── WRITE MODAL ──
+var strokeDrawing = false;
+var strokeCtx = null;
+var strokeGuideVisible = true;
+
+function openWriteModal(e) {
+  e.stopPropagation();
+  var k = fcDeck[fcIndex];
+  if (!k) return;
+  document.getElementById('stroke-kanji').textContent = k.k;
+  document.getElementById('stroke-guide-char').textContent = k.k;
+  document.getElementById('stroke-hint-txt').textContent = 'Parmaginla yaz';
+  document.getElementById('stroke-overlay').classList.add('open');
+  strokeClearCanvas();
+}
+
+function strokeGetPos(e, canvas) {
+  var rect = canvas.getBoundingClientRect();
+  var scaleX = canvas.width / rect.width;
+  var scaleY = canvas.height / rect.height;
+  if (e.touches && e.touches.length > 0) {
+    return {
+      x: (e.touches[0].clientX - rect.left) * scaleX,
+      y: (e.touches[0].clientY - rect.top) * scaleY
+    };
+  }
+  return {
+    x: (e.clientX - rect.left) * scaleX,
+    y: (e.clientY - rect.top) * scaleY
+  };
+}
+
+function strokeInitEvents() {
+  var canvas = document.getElementById('stroke-canvas');
+  if (canvas._inited) return;
+  canvas._inited = true;
+  function start(e) {
+    e.preventDefault();
+    strokeDrawing = true;
+    var pos = strokeGetPos(e, canvas);
+    strokeCtx.beginPath();
+    strokeCtx.moveTo(pos.x, pos.y);
+  }
+  function move(e) {
+    e.preventDefault();
+    if (!strokeDrawing) return;
+    var pos = strokeGetPos(e, canvas);
+    strokeCtx.lineTo(pos.x, pos.y);
+    strokeCtx.stroke();
+  }
+  function end(e) {
+    e.preventDefault();
+    strokeDrawing = false;
+    if (strokeCtx) strokeCtx.beginPath();
+  }
+  canvas.addEventListener('mousedown', start);
+  canvas.addEventListener('mousemove', move);
+  canvas.addEventListener('mouseup', end);
+  canvas.addEventListener('touchstart', start, {passive: false});
+  canvas.addEventListener('touchmove', move, {passive: false});
+  canvas.addEventListener('touchend', end, {passive: false});
+}
+
+function strokeClearCanvas() {
+  var canvas = document.getElementById('stroke-canvas');
+  strokeCtx = canvas.getContext('2d');
+  strokeCtx.clearRect(0, 0, canvas.width, canvas.height);
+  strokeCtx.strokeStyle = '#1a1410';
+  strokeCtx.lineWidth = 5;
+  strokeCtx.lineCap = 'round';
+  strokeCtx.lineJoin = 'round';
+  strokeInitEvents();
+}
+
+function strokeToggleGuide() {
+  strokeGuideVisible = !strokeGuideVisible;
+  document.getElementById('stroke-guide').style.display = strokeGuideVisible ? 'flex' : 'none';
+  document.getElementById('stroke-guide-btn').textContent = strokeGuideVisible ? 'Kilavuz: Acik' : 'Kilavuz: Kapali';
+}
+
+
+function closeWriteModal() {
+  document.getElementById('stroke-overlay').classList.remove('open');
+}
+
+// ── FAVORITES ──
+var favorites = (function() {
+  try {
+    var stored = localStorage.getItem('kanji500_favs');
+    return stored ? JSON.parse(stored) : {};
+  } catch(e) { return {}; }
+})();
+
+function saveFavs() {
+  try { localStorage.setItem('kanji500_favs', JSON.stringify(favorites)); } catch(e) {}
+}
+
+function toggleFav(e, n) {
+  e.stopPropagation();
+  if (favorites[n]) {
+    delete favorites[n];
+  } else {
+    favorites[n] = true;
+  }
+  saveFavs();
+  updateFavUI(n);
+  updateFavBadge();
+  if (currentView === 'favs') renderFavs();
+}
+
+function toggleFavModal() {
+  var n = parseInt(document.getElementById('m-fav-btn').getAttribute('data-n'));
+  if (!n) return;
+  if (favorites[n]) { delete favorites[n]; } else { favorites[n] = true; }
+  saveFavs();
+  updateFavUI(n);
+  updateFavBadge();
+  var btn = document.getElementById('m-fav-btn');
+  btn.textContent = favorites[n] ? '★' : '☆';
+  btn.className = 'fav-star-btn' + (favorites[n] ? ' active' : '');
+  if (currentView === 'favs') renderFavs();
+}
+
+function toggleFavFC(e) {
+  e.stopPropagation();
+  var k = fcDeck[fcIndex];
+  if (!k) return;
+  if (favorites[k.n]) { delete favorites[k.n]; } else { favorites[k.n] = true; }
+  saveFavs();
+  var btn = document.getElementById('fc-fav-btn');
+  btn.textContent = favorites[k.n] ? '★' : '☆';
+  btn.className = 'fav-star-btn' + (favorites[k.n] ? ' active' : '');
+  updateFavUI(k.n);
+  updateFavBadge();
+}
+
+function updateFavUI(n) {
+  var star = '☆', starActive = '★';
+  var isFav = !!favorites[n];
+  var listBtn = document.getElementById('fav-' + n);
+  if (listBtn) { listBtn.textContent = isFav ? starActive : star; listBtn.className = 'fav-star-btn' + (isFav ? ' active' : ''); }
+  var gridBtn = document.getElementById('fav-grid-' + n);
+  if (gridBtn) { gridBtn.textContent = isFav ? starActive : star; gridBtn.className = 'fav-star-btn' + (isFav ? ' active' : ''); }
+}
+
+function updateFavBadge() {
+  var count = Object.keys(favorites).length;
+  var badge = document.getElementById('fav-count-badge');
+  if (badge) badge.textContent = count > 0 ? count : '';
+  var btn = document.getElementById('btn-favs');
+  if (btn) btn.style.color = count > 0 ? '#f0b429' : '';
+}
+
+function renderFavs() {
+  var favList = KANJI.filter(function(k) { return favorites[k.n]; });
+  var emptyEl = document.getElementById('favs-empty');
+  var headerEl = document.getElementById('favs-header');
+  var rowsEl = document.getElementById('favs-rows');
+  if (favList.length === 0) {
+    emptyEl.style.display = 'block';
+    headerEl.style.display = 'none';
+    rowsEl.innerHTML = '';
+    return;
+  }
+  emptyEl.style.display = 'none';
+  headerEl.style.display = 'grid';
+  rowsEl.innerHTML = favList.map(function(k) {
+    return '<div class="list-row"><div class="n" style="display:flex;align-items:center;gap:0.2rem;"><button class="fav-star-btn active" onclick="toggleFav(event,' + k.n + ')" id="fav-fv-' + k.n + '">★</button><span onclick="openModal(' + k.n + ')">' + k.n + '</span></div><div class="k" onclick="openModal(' + k.n + ')">' + k.k + '</div><div class="r" onclick="openModal(' + k.n + ')">' + (k.on.join('、') || '—') + '<br><span style="color:#1a6b3c">' + (k.kun.join('、') || '—') + '</span></div><div class="m" onclick="openModal(' + k.n + ')">' + k.m + '</div><div class="e" onclick="openModal(' + k.n + ')">' + ((k.ex[0] && k.ex[0].w) || '') + ' ' + (k.ex[0] && k.ex[0].r ? '「' + k.ex[0].r + '」' : '') + ' ' + (k.ex[0] && k.ex[0].m ? '— ' + k.ex[0].m : '') + '</div></div>';
+  }).join('');
+}
+
+// ── DETAY MODAL ──
+function openDetayModal(e) {
+  e.stopPropagation();
+  var k = fcDeck[fcIndex];
+  if (!k) return;
+  var d = ALL_DETAY[k.k];
+  document.getElementById('detay-kanji').textContent = k.k;
+  document.getElementById('detay-meaning').textContent = k.m;
+  if (d) {
+    document.getElementById('detay-content').innerHTML =
+      '<div style="margin-bottom:0.8rem;"><span style="font-family:DM Mono,monospace;font-size:0.6rem;color:#8a7f72;text-transform:uppercase;letter-spacing:0.1em;">Radikaller</span><br>' +
+      '<span style="font-size:0.9rem;">' + d.radikaller + '</span></div>' +
+      '<div><span style="font-family:DM Mono,monospace;font-size:0.6rem;color:#8a7f72;text-transform:uppercase;letter-spacing:0.1em;">Hikaye</span><br>' +
+      '<span style="font-size:0.85rem;line-height:1.8;">' + d.hikaye + '</span></div>';
+  } else {
+    document.getElementById('detay-content').innerHTML =
+      '<div style="color:#8a7f72;font-family:DM Mono,monospace;font-size:0.75rem;">Bu kanji icin detay henuz eklenmedi.</div>';
+  }
+  document.getElementById('detay-overlay').classList.add('open');
+}
+function closeDetayModal() {
+  document.getElementById('detay-overlay').classList.remove('open');
+}
 
 // ── EVENTS ──
 document.getElementById('search').addEventListener('input', filter);
@@ -1180,6 +1499,7 @@ document.getElementById('jlpt-filter').addEventListener('change', filter);
   setView('list');
   document.getElementById('shown-count').textContent = filteredData.length;
   render();
+  updateFavBadge();
 })();
 </script>
 </body>
