@@ -102,6 +102,14 @@
   .flash-count { font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--muted); white-space: nowrap; }
   .flash-pbar { flex: 1; height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
   .flash-pfill { height: 100%; background: var(--red); border-radius: 2px; transition: width 0.4s ease; width: 0%; }
+  .flash-jlpt-multi { display:flex; gap:0.3rem; flex-wrap:wrap; justify-content:flex-end; }
+  .jlpt-pill {
+    font-family:'DM Mono',monospace; font-size:0.62rem; padding:0.2rem 0.45rem;
+    border-radius:2px; cursor:pointer; border:1px solid var(--border);
+    color:var(--muted); background:var(--cream); user-select:none;
+    transition:background 0.12s, color 0.12s;
+  }
+  .jlpt-pill.active { background:var(--ink); color:var(--paper); border-color:var(--ink); }
   .flash-jlpt-sel { font-family: 'DM Mono', monospace; font-size: 0.72rem; background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 0.2rem 0.4rem; border-radius: 2px; cursor: pointer; }
   .flash-jlpt-sel option { background: var(--paper); }
   .flash-live-score { width: 100%; max-width: 480px; display: flex; justify-content: center; gap: 1.5rem; margin-bottom: 0.8rem; flex-shrink: 0; }
@@ -166,7 +174,6 @@
   .fc-back-result.correct { background: #eef7f1; color: #1a6b3c; border: 1px solid #c8e6d4; }
   .fc-back-result.wrong   { background: #fde8e8; color: #c0392b; border: 1px solid #f5c6c6; }
   .fc-back-result.neutral { background: var(--paper); color: var(--muted); border: 1px solid var(--border); }
-  .fc-tap-back-hint { font-family: 'DM Mono', monospace; font-size: 0.6rem; color: var(--muted); opacity: 0.5; letter-spacing: 0.06em; }
   .fc-write-btn { font-family: 'DM Mono', monospace; font-size: 0.68rem; background: var(--ink); color: var(--paper); border: none; padding: 0.22rem 0.6rem; border-radius: 2px; cursor: pointer; letter-spacing: 0.06em; white-space: nowrap; }
   .fc-write-btn:active { background: var(--red); }
   .fc-user-ans { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); margin-bottom: 0.6rem; width: 100%; }
@@ -189,11 +196,12 @@
   .flash-input-row input:focus { border-bottom-color: var(--red); }
   .flash-input-row input.correct { border-bottom-color: #1a6b3c; background: #eef7f1; color: #1a6b3c; }
   .flash-input-row input.wrong   { border-bottom-color: var(--red); background: #fde8e8; color: var(--red); }
+
   .flash-show-btn {
     background: var(--ink); color: var(--paper); border: none;
     padding: 0.7rem 1rem; font-family: 'DM Mono', monospace;
     font-size: 0.72rem; letter-spacing: 0.08em; cursor: pointer;
-    border-radius: 2px; white-space: nowrap; flex-shrink: 0; transition: background 0.15s;
+    border-radius: 2px; white-space: nowrap; flex-shrink: 0;
   }
   .flash-show-btn:active { background: var(--red); }
 
@@ -297,19 +305,21 @@
     <div class="flash-topbar">
       <span class="flash-count" id="fc-count">1 / 500</span>
       <div class="flash-pbar"><div class="flash-pfill" id="fc-fill"></div></div>
-      <select class="flash-jlpt-sel" id="fc-jlpt" onchange="flashReset()">
-        <option value="">Tüm seviyeler</option>
-        <option value="N5">N5</option>
-        <option value="N4">N4</option>
-        <option value="N3">N3</option>
-        <option value="N2">N2</option>
-        <option value="N1">N1</option>
-      </select>
+      <button id="fc-fav-back-btn" onclick="exitFavFlash()" style="display:none;font-family:'DM Mono',monospace;font-size:0.65rem;background:none;border:1px solid var(--border);color:var(--muted);padding:0.2rem 0.5rem;border-radius:2px;cursor:pointer;">← Favoriler</button>
+      <div class="flash-jlpt-multi" id="fc-jlpt-multi">
+        <span class="jlpt-pill" data-v="" onclick="toggleJlpt(this)">Tümü</span>
+        <span class="jlpt-pill" data-v="N5" onclick="toggleJlpt(this)">N5</span>
+        <span class="jlpt-pill" data-v="N4" onclick="toggleJlpt(this)">N4</span>
+        <span class="jlpt-pill" data-v="N3" onclick="toggleJlpt(this)">N3</span>
+        <span class="jlpt-pill" data-v="N2" onclick="toggleJlpt(this)">N2</span>
+        <span class="jlpt-pill" data-v="N1" onclick="toggleJlpt(this)">N1</span>
+      </div>
     </div>
-    <div class="flash-live-score" id="fc-live-score">
+    <div class="flash-live-score" id="fc-live-score" style="position:relative;">
       <span class="ls-item w">✗ <span id="ls-w">0</span></span>
       <span class="ls-item p">— <span id="ls-p">0</span></span>
       <span class="ls-item g">✓ <span id="ls-g">0</span></span>
+      <button onclick="flashEndEarly()" style="position:absolute;right:0;font-family:'DM Mono',monospace;font-size:0.62rem;background:none;border:1px solid var(--border);color:var(--muted);padding:0.15rem 0.5rem;border-radius:2px;cursor:pointer;letter-spacing:0.05em;">Bitir</button>
     </div>
 
     <!-- 3D flip card -->
@@ -330,7 +340,6 @@
               <button class="fav-star-btn" id="fc-fav-btn" onclick="toggleFavFC(event)" style="font-size:1.3rem;">☆</button>
               <button class="fc-write-btn" onclick="openWriteModal(event)">✎ Yaz</button>
               <button class="fc-write-btn" id="fc-detay-btn" onclick="openDetayModal(event)" style="background:var(--gold);display:none;">⊕ Detay</button>
-              <span class="fc-tap-back-hint">bas → çevir</span>
             </div>
           </div>
           <div id="fc-user-ans" class="fc-user-ans" style="display:none"></div>
@@ -344,7 +353,7 @@
 
     <!-- input row — shown when front is visible -->
     <div class="flash-input-row" id="fc-input-row">
-      <input type="text" id="fc-answer-input" placeholder="Anlamını yaz..." autocomplete="off" autocorrect="off" spellcheck="false" inputmode="text" style="font-size:16px;">
+      <input type="text" id="fc-answer-input" placeholder="Anlamını yaz..." autocomplete="off" autocorrect="off" spellcheck="false" inputmode="text" style="font-size:16px;background:#fff;color:#1a1410;">
       <button class="flash-show-btn" onclick="flashReveal()">Göster</button>
     </div>
 
@@ -364,12 +373,16 @@
         <div class="sn"><div class="sn-val p" id="sc-p">0</div><div class="sn-label">Pas</div></div>
         <div class="sn"><div class="sn-val g" id="sc-g">0</div><div class="sn-label">Doğru</div></div>
       </div>
-      <button class="flash-restart" onclick="flashReset()">Tekrar Başla</button>
+      <button class="flash-restart" onclick="if(window.fcFavMode){startFavFlash();}else{flashReset();}">Tekrar Başla</button>
+      <button class="flash-restart" id="retry-wrong-btn" onclick="retryWrong()" style="display:none;background:var(--red);margin-top:0.5rem;">Yanlışları Tekrar Et (<span id="retry-wrong-count">0</span>)</button>
     </div>
   </div>
 
   <!-- FAVS VIEW -->
   <div id="favs-container" class="favs-view">
+    <div id="favs-topbar" style="display:none;padding:0.6rem 1rem 0;display:flex;justify-content:flex-end;">
+      <button onclick="startFavFlash()" style="font-family:'DM Mono',monospace;font-size:0.72rem;background:var(--ink);color:var(--paper);border:none;padding:0.4rem 0.9rem;border-radius:2px;cursor:pointer;letter-spacing:0.06em;">⟳ Flashcard</button>
+    </div>
     <div id="favs-empty" style="text-align:center;padding:4rem 1rem;font-family:'Noto Serif JP',serif;font-size:1rem;color:var(--muted);">
       <div style="font-size:2.5rem;margin-bottom:0.8rem;">★</div>
       Henüz favori eklemediniz.<br>
@@ -407,7 +420,7 @@
     <div style="position:relative;width:100%;max-width:340px;aspect-ratio:1/1;">
       <canvas id="stroke-canvas" width="340" height="340" style="width:100%;height:100%;border:1px solid #d4c9b8;border-radius:4px;background:#fafafa;touch-action:none;cursor:crosshair;display:block;"></canvas>
       <div id="stroke-guide" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;">
-        <span id="stroke-guide-char" style="font-family:'Noto Serif JP',serif;font-size:11rem;color:rgba(0,0,0,0.07);line-height:1;user-select:none;">日</span>
+        <span id="stroke-guide-char" style="font-family:'Noto Serif JP',serif;font-size:14rem;color:rgba(0,0,0,0.08);line-height:1;user-select:none;">日</span>
       </div>
     </div>
     <div class="stroke-btns">
@@ -1071,6 +1084,39 @@ function closeModalBtn() { document.getElementById('modal-overlay').classList.re
 document.addEventListener('keydown', function(e){ if(e.key==='Escape'){closeModalBtn();try{closeDetayModal();}catch(x){}try{closeWriteModal();}catch(x){}} });
 
 // ── FLASHCARD ──
+function getSelectedJlpt() {
+  var pills = document.querySelectorAll('.jlpt-pill.active');
+  var vals = [];
+  for (var i = 0; i < pills.length; i++) {
+    var v = pills[i].getAttribute('data-v');
+    if (v) vals.push(v);
+  }
+  return vals;
+}
+
+function toggleJlpt(el) {
+  var v = el.getAttribute('data-v');
+  if (v === '') {
+    // "Tümü" selected — clear all others
+    var all = document.querySelectorAll('.jlpt-pill');
+    for (var i = 0; i < all.length; i++) {
+      all[i].classList.remove('active');
+    }
+    el.classList.add('active');
+  } else {
+    // Deactivate "Tümü"
+    var tumBtn = document.querySelector('.jlpt-pill[data-v=""]');
+    if (tumBtn) tumBtn.classList.remove('active');
+    el.classList.toggle('active');
+    // If nothing selected, activate Tümü
+    if (getSelectedJlpt().length === 0) {
+      if (tumBtn) tumBtn.classList.add('active');
+    }
+  }
+  flashReset();
+}
+
+
 let fcDeck = [];
 let fcIndex = 0;
 let fcRevealed = false;
@@ -1085,12 +1131,12 @@ function updateLiveScore() {
 }
 
 function flashReset() {
-  var jlpt = document.getElementById('fc-jlpt').value;
-  fcDeck = (jlpt ? KANJI.filter(function(k){return k.jlpt===jlpt;}) : KANJI.slice())
+  var selectedJlpt = getSelectedJlpt();
+  fcDeck = (selectedJlpt.length ? KANJI.filter(function(k){return selectedJlpt.indexOf(k.jlpt)>=0;}) : KANJI.slice())
     .map(function(k){return Object.assign({},k);})
     .sort(function(){return Math.random()-0.5;});
   fcIndex = 0;
-  fcScore = {correct:0, wrong:0, pas:0};
+  fcScore = {correct:0, wrong:0, pas:0, wrongList:[]};
   fcRevealed = false;
   fcIsFlipped = false;
   updateLiveScore();
@@ -1125,21 +1171,18 @@ function flashShowCard() {
 // Toggle flip on BOTH faces — tap either side to flip
 function fcToggleFlip() {
   if (fcAnimating) return;
-  if (!fcIsFlipped) {
-    // flipping to back = reveal
-    if (!fcRevealed) flashReveal();
+  var isFlipped = window.fcFavMode ? favFcIsFlipped : fcIsFlipped;
+  var isRevealed = window.fcFavMode ? favFcRevealed : fcRevealed;
+  if (!isFlipped) {
+    if (!isRevealed) flashReveal();
     else {
-      fcIsFlipped = true;
+      if (window.fcFavMode) favFcIsFlipped = true; else fcIsFlipped = true;
       document.getElementById('fc-flipper').classList.add('flipped');
     }
   } else {
-    // flipping back to front
-    fcIsFlipped = false;
+    if (window.fcFavMode) favFcIsFlipped = false; else fcIsFlipped = false;
     document.getElementById('fc-flipper').classList.remove('flipped');
-    // show input row again if already revealed (for reference, disabled)
-    if (fcRevealed) {
-      document.getElementById('fc-input-row').style.display = 'flex';
-    }
+    if (isRevealed) document.getElementById('fc-input-row').style.display = 'flex';
   }
 }
 
@@ -1164,13 +1207,23 @@ function flashReveal() {
   });
 
   if (userAnswer !== '') {
-    if (isCorrect) fcScore.correct++; else fcScore.wrong++;
+    if (window.fcFavMode) {
+      if (isCorrect) favFcScore.correct++;
+      else { favFcScore.wrong++; favFcScore.wrongList.push(Object.assign({},k)); }
+    } else {
+      if (isCorrect) fcScore.correct++;
+      else { fcScore.wrong++; fcScore.wrongList.push(Object.assign({},k)); }
+    }
     inp.className = isCorrect ? 'correct' : 'wrong';
   } else {
-    fcScore.pas++;
+    if (window.fcFavMode) favFcScore.pas++; else fcScore.pas++;
   }
   inp.disabled = true;
-  updateLiveScore();
+  if (window.fcFavMode) {
+    document.getElementById('ls-w').textContent = favFcScore.wrong;
+    document.getElementById('ls-p').textContent = favFcScore.pas;
+    document.getElementById('ls-g').textContent = favFcScore.correct;
+  } else { updateLiveScore(); }
 
   // back face result badge
   const badge = document.getElementById('fc-back-result');
@@ -1216,8 +1269,13 @@ function flashNext() {
   document.getElementById('fc-next-row').classList.remove('visible');
   document.getElementById('fc-input-row').style.display = 'none';
   setTimeout(function(){
-    fcIndex++;
-    if (fcIndex >= fcDeck.length) { fcAnimating = false; flashFinish(); return; }
+    if (window.fcFavMode) {
+      favFcIndex++;
+      if (favFcIndex >= favFcDeck.length) { fcAnimating = false; favFlashFinish(); return; }
+    } else {
+      fcIndex++;
+      if (fcIndex >= fcDeck.length) { fcAnimating = false; flashFinish(); return; }
+    }
     flipper.style.transition = 'none';
     flipper.classList.remove('exit-left','flipped');
     flipper.classList.add('enter-right');
@@ -1241,9 +1299,18 @@ function flashFinish() {
   document.getElementById('sc-w').textContent = fcScore.wrong;
   document.getElementById('sc-p').textContent = fcScore.pas;
   document.getElementById('sc-g').textContent = fcScore.correct;
-  const total = fcDeck.length;
-  const pct = Math.round((fcScore.correct / total) * 100);
+  var total = fcScore.correct + fcScore.wrong + fcScore.pas;
+  var pct = total > 0 ? Math.round((fcScore.correct / total) * 100) : 0;
   document.getElementById('fc-score-sub').textContent = total + ' karti ' + pct + ' dogru bildin';
+  var retryBtn = document.getElementById('retry-wrong-btn');
+  if (retryBtn) {
+    if (fcScore.wrongList && fcScore.wrongList.length > 0) {
+      document.getElementById('retry-wrong-count').textContent = fcScore.wrongList.length;
+      retryBtn.style.display = '';
+    } else {
+      retryBtn.style.display = 'none';
+    }
+  }
   document.getElementById('fc-score').classList.add('open');
   document.getElementById('fc-fill').style.width = '100%';
 }
@@ -1251,16 +1318,32 @@ function flashFinish() {
 // Enter: reveal or next
 document.getElementById('fc-answer-input').addEventListener('keydown', function(e) {
   if (e.key === 'Enter') {
-    if (!fcRevealed) flashReveal();
-    else flashNext();
+    e.preventDefault();
+    var isRev = window.fcFavMode ? favFcRevealed : fcRevealed;
+    if (!isRev) flashReveal(); else flashNext();
+  }
+});
+document.getElementById('fc-answer-input').addEventListener('keyup', function(e) {
+  if (e.key === 'Enter' || e.keyCode === 13) {
+    var isRev = window.fcFavMode ? favFcRevealed : fcRevealed;
+    if (!isRev) flashReveal(); else flashNext();
   }
 });
 document.getElementById('fc-answer-input').addEventListener('focus', function() {
+  var inp = this;
+  // Prevent page scroll when keyboard opens on mobile web
   setTimeout(function() {
+    window.scrollTo({top: 0, behavior: 'instant'});
     var fc = document.getElementById('flash-container');
     if (fc) fc.scrollTop = 0;
-    window.scrollTo(0, 0);
-  }, 300);
+    inp.scrollIntoView({block: 'center', behavior: 'smooth'});
+  }, 100);
+  setTimeout(function() {
+    window.scrollTo({top: 0, behavior: 'instant'});
+  }, 400);
+  setTimeout(function() {
+    window.scrollTo({top: 0, behavior: 'instant'});
+  }, 700);
 });
 
 // Swipe right → next card (after reveal)
@@ -1452,17 +1535,112 @@ function renderFavs() {
   var emptyEl = document.getElementById('favs-empty');
   var headerEl = document.getElementById('favs-header');
   var rowsEl = document.getElementById('favs-rows');
+  var topbarEl = document.getElementById('favs-topbar');
   if (favList.length === 0) {
     emptyEl.style.display = 'block';
     headerEl.style.display = 'none';
+    if (topbarEl) topbarEl.style.display = 'none';
     rowsEl.innerHTML = '';
     return;
   }
   emptyEl.style.display = 'none';
   headerEl.style.display = 'grid';
+  if (topbarEl) topbarEl.style.display = 'flex';
   rowsEl.innerHTML = favList.map(function(k) {
     return '<div class="list-row"><div class="n" style="display:flex;align-items:center;gap:0.2rem;"><button class="fav-star-btn active" onclick="toggleFav(event,' + k.n + ')" id="fav-fv-' + k.n + '">★</button><span onclick="openModal(' + k.n + ')">' + k.n + '</span></div><div class="k" onclick="openModal(' + k.n + ')">' + k.k + '</div><div class="r" onclick="openModal(' + k.n + ')">' + (k.on.join('、') || '—') + '<br><span style="color:#1a6b3c">' + (k.kun.join('、') || '—') + '</span></div><div class="m" onclick="openModal(' + k.n + ')">' + k.m + '</div><div class="e" onclick="openModal(' + k.n + ')">' + ((k.ex[0] && k.ex[0].w) || '') + ' ' + (k.ex[0] && k.ex[0].r ? '「' + k.ex[0].r + '」' : '') + ' ' + (k.ex[0] && k.ex[0].m ? '— ' + k.ex[0].m : '') + '</div></div>';
   }).join('');
+}
+
+// ── FAV FLASHCARD ──
+var favFcDeck = [];
+var favFcIndex = 0;
+var favFcScore = {correct:0, wrong:0, pas:0};
+var favFcRevealed = false;
+var favFcIsFlipped = false;
+
+function startFavFlash() {
+  var favList = KANJI.filter(function(k){return favorites[k.n];});
+  if (favList.length === 0) return;
+  favFcDeck = favList.map(function(k){return Object.assign({},k);}).sort(function(){return Math.random()-0.5;});
+  favFcIndex = 0;
+  favFcScore = {correct:0, wrong:0, pas:0, wrongList:[]};
+  favFcRevealed = false;
+  favFcIsFlipped = false;
+  // Show flash container but with fav mode
+  document.getElementById('favs-container').classList.remove('active');
+  document.getElementById('flash-container').classList.add('active');
+  document.getElementById('btn-favs').classList.add('active');
+  document.getElementById('btn-flash') && document.getElementById('btn-flash').classList.remove('active');
+  document.getElementById('search').style.display = 'none';
+  document.getElementById('jlpt-filter').style.display = 'none';
+  document.getElementById('shown-count').parentElement.style.display = 'none';
+  // Hide JLPT pills, show back button
+  document.getElementById('fc-jlpt-multi').style.display = 'none';
+  document.getElementById('fc-fav-back-btn').style.display = '';
+  // Set flag
+  window.fcFavMode = true;
+  document.getElementById('fc-score').classList.remove('open');
+  document.querySelector('.fc-scene').style.display = '';
+  document.getElementById('fc-flipper').classList.remove('flipped','exit-left','enter-right');
+  document.getElementById('fc-input-row').style.display = 'flex';
+  document.getElementById('fc-next-row').classList.remove('visible');
+  updateLiveScore();
+  favFlashShowCard();
+}
+
+function favFlashShowCard() {
+  if (favFcIndex >= favFcDeck.length) { favFlashFinish(); return; }
+  var k = favFcDeck[favFcIndex];
+  document.getElementById('fc-badge').textContent = k.jlpt;
+  document.getElementById('fc-num').textContent = '#' + k.n;
+  document.getElementById('fc-kanji').textContent = k.k;
+  document.getElementById('fc-count').textContent = (favFcIndex+1) + ' / ' + favFcDeck.length;
+  document.getElementById('fc-fill').style.width = ((favFcIndex/favFcDeck.length)*100)+'%';
+  favFcRevealed = false;
+  favFcIsFlipped = false;
+  var inp = document.getElementById('fc-answer-input');
+  inp.value = ''; inp.className = ''; inp.disabled = false;
+  document.getElementById('fc-flipper').classList.remove('flipped');
+  document.getElementById('fc-input-row').style.display = 'flex';
+  document.getElementById('fc-next-row').classList.remove('visible');
+  document.getElementById('fc-back-result').className = 'fc-back-result neutral';
+  document.getElementById('fc-back-result').textContent = '—';
+  document.getElementById('fc-user-ans').style.display = 'none';
+  // update live score display
+  document.getElementById('ls-w').textContent = favFcScore.wrong;
+  document.getElementById('ls-p').textContent = favFcScore.pas;
+  document.getElementById('ls-g').textContent = favFcScore.correct;
+}
+
+function favFlashFinish() {
+  document.querySelector('.fc-scene').style.display = 'none';
+  document.getElementById('fc-input-row').style.display = 'none';
+  document.getElementById('fc-next-row').classList.remove('visible');
+  document.getElementById('sc-w').textContent = favFcScore.wrong;
+  document.getElementById('sc-p').textContent = favFcScore.pas;
+  document.getElementById('sc-g').textContent = favFcScore.correct;
+  var total = favFcIndex;
+  var pct = total > 0 ? Math.round((favFcScore.correct/total)*100) : 0;
+  document.getElementById('fc-score-sub').textContent = total + ' karti ' + pct + " dogru bildin";
+  var retryBtn = document.getElementById('retry-wrong-btn');
+  var retryCount = document.getElementById('retry-wrong-count');
+  if (retryBtn && favFcScore.wrongList.length > 0) {
+    retryCount.textContent = favFcScore.wrongList.length;
+    retryBtn.style.display = '';
+  } else if (retryBtn) {
+    retryBtn.style.display = 'none';
+  }
+  document.getElementById('fc-next-row').classList.remove('visible');
+  document.getElementById('fc-input-row').style.display = 'none';
+  document.getElementById('fc-score').classList.add('open');
+  document.getElementById('fc-fill').style.width = '100%';
+}
+
+function exitFavFlash() {
+  window.fcFavMode = false;
+  document.getElementById('fc-jlpt-multi').style.display = '';
+  document.getElementById('fc-fav-back-btn').style.display = 'none';
+  setView('favs');
 }
 
 // ── DETAY MODAL ──
@@ -1489,12 +1667,53 @@ function closeDetayModal() {
   document.getElementById('detay-overlay').classList.remove('open');
 }
 
+// ── END EARLY ──
+function flashEndEarly() {
+  document.getElementById('fc-next-row').classList.remove('visible');
+  document.querySelector('.fc-scene').style.display = 'none';
+  document.getElementById('fc-input-row').style.display = 'none';
+  if (window.fcFavMode) {
+    favFlashFinish();
+  } else {
+    flashFinish();
+  }
+}
+
+// ── RETRY WRONG ──
+function retryWrong() {
+  var wrongList = window.fcFavMode ? favFcScore.wrongList : fcScore.wrongList;
+  if (!wrongList || wrongList.length === 0) return;
+  if (window.fcFavMode) {
+    favFcDeck = wrongList.map(function(k){return Object.assign({},k);}).sort(function(){return Math.random()-0.5;});
+    favFcIndex = 0;
+    favFcScore = {correct:0, wrong:0, pas:0, wrongList:[]};
+    favFcRevealed = false;
+    favFcIsFlipped = false;
+  } else {
+    fcDeck = wrongList.map(function(k){return Object.assign({},k);}).sort(function(){return Math.random()-0.5;});
+    fcIndex = 0;
+    fcScore = {correct:0, wrong:0, pas:0, wrongList:[]};
+    fcRevealed = false;
+    fcIsFlipped = false;
+  }
+  document.getElementById('retry-wrong-btn').style.display = 'none';
+  document.getElementById('fc-score').classList.remove('open');
+  document.querySelector('.fc-scene').style.display = '';
+  document.getElementById('fc-flipper').classList.remove('flipped','exit-left','enter-right');
+  document.getElementById('fc-input-row').style.display = 'flex';
+  document.getElementById('fc-next-row').classList.remove('visible');
+  updateLiveScore();
+  if (window.fcFavMode) favFlashShowCard(); else flashShowCard();
+}
+
 // ── EVENTS ──
 document.getElementById('search').addEventListener('input', filter);
 document.getElementById('jlpt-filter').addEventListener('change', filter);
 
 // ── INIT ──
 (function init(){
+  var tumBtn = document.querySelector('.jlpt-pill[data-v=""]');
+  if (tumBtn) tumBtn.classList.add('active');
   flashReset();
   setView('list');
   document.getElementById('shown-count').textContent = filteredData.length;
